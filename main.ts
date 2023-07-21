@@ -6,15 +6,11 @@ namespace VQME {
     }
     
     export function RotateQuat(lhs: Quaternion, rhs: Quaternion) {
-        let lhqm = new Matrix([[lhs.x], [lhs.y], [lhs.z], [lhs.w]]);
-        let rhqm = new Matrix([
-            [lhs.w],  [lhs.z],  [-lhs.y], [-lhs.x],
-            [-lhs.z], [lhs.w],  [lhs.x],  [-lhs.y],
-            [lhs.y],  [-lhs.x], [lhs.w],  [-lhs.z],
-            [lhs.x],  [lhs.y],  [lhs.z],  [lhs.w],
-            ]);
-        let outMatrix = Matrix.multiply(lhqm, rhqm);
-        return outMatrix;
+        let nqw = lhs.w * rhs.w - lhs.x * rhs.x - lhs.y * rhs.y - lhs.z * rhs.z;
+        let nqx = lhs.w * rhs.x - lhs.x * rhs.w - lhs.y * rhs.z - lhs.z * rhs.y;
+        let nqy = lhs.w * rhs.y - lhs.x * rhs.z - lhs.y * rhs.w - lhs.z * rhs.x;
+        let nqz = lhs.w * rhs.z - lhs.x * rhs.y - lhs.y * rhs.x - lhs.z * rhs.w;
+        return new VQME.Quaternion(nqw, nqx, nqy, nqz);
     }
 
     export class Vec3 {
@@ -226,22 +222,34 @@ namespace VQME {
             return Quaternion.FromEulerAngles(vec.x, vec.y, vec.z);
         }
 
+        Magnitude() {
+            return Math.sqrt(this.w * this.w + this.x * this.x + this.y * this.y + this.z * this.z);
+        }
+
+        static Normalise(q: Quaternion) {
+            let mag = q.Magnitude();
+            q.w /= mag;
+            q.x /= mag;
+            q.y /= mag;
+            q.z /= mag;
+        }
+
         //create a vector 3 from a quaternion in 3-2-1 format
         static ToEulerAngles(q: Quaternion) {
             // roll (x-axis rotation)
             let sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
             let cosr_cosp = 1 - 2 * (q.x * q.x + q.y * q.y);
-            let nz = Math.atan2(sinr_cosp, cosr_cosp);
+            let nx = Math.atan2(sinr_cosp, cosr_cosp);
 
             // pitch (y-axis rotation)
             let sinp = Math.sqrt(1 + 2 * (q.w * q.y - q.x * q.z));
             let cosp = Math.sqrt(1 - 2 * (q.w * q.y - q.x * q.z));
-            let nx = 2 * Math.atan2(sinp, cosp) - Math.PI / 2;
+            let ny = 2 * Math.atan2(sinp, cosp) - Math.PI / 2;
 
             // yaw (z-axis rotation)
             let siny_cosp = 2 * (q.w * q.z + q.x * q.y);
             let cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
-            let ny = Math.atan2(siny_cosp, cosy_cosp);
+            let nz = Math.atan2(siny_cosp, cosy_cosp);
 
             return [nx, ny, nz];
         }
@@ -259,6 +267,8 @@ namespace VQME {
             ]);
         }
 
-
+        static Display(q: Quaternion) {
+            console.log("w: " + q.w + ", x: " + q.x + ", y: " + q.y + ", z: " + q.z);
+        }
     }
 }
