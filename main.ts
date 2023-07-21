@@ -14,7 +14,7 @@ namespace VQME {
             [lhs.x],  [lhs.y],  [lhs.z],  [lhs.w],
             ]);
         let outMatrix = Matrix.multiply(lhqm, rhqm);
-        console.log(outMatrix.values);
+        return outMatrix;
     }
 
     export class Vec3 {
