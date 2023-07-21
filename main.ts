@@ -4,6 +4,18 @@ namespace VQME {
     export function RotateVec(lhs: Quaternion, rhs: Vec3) {
 
     }
+    
+    export function RotateQuat(lhs: Quaternion, rhs: Quaternion) {
+        let lhqm = new Matrix([[lhs.x], [lhs.y], [lhs.z], [lhs.w]]);
+        let rhqm = new Matrix([
+            [lhs.w],  [lhs.z],  [-lhs.y], [-lhs.x],
+            [-lhs.z], [lhs.w],  [lhs.x],  [-lhs.y],
+            [lhs.y],  [-lhs.x], [lhs.w],  [-lhs.z],
+            [lhs.x],  [lhs.y],  [lhs.z],  [lhs.w],
+            ]);
+        let outMatrix = Matrix.multiply(lhqm, rhqm);
+        console.log(outMatrix.values);
+    }
 
     export class Vec3 {
         x: number;
@@ -233,5 +245,20 @@ namespace VQME {
 
             return [nx, ny, nz];
         }
+
+        static ToArray(q: Quaternion) {
+            return [q.w, q.x, q.y, q.z];
+        }
+
+        static ToRotationMatrix(quat: Quaternion) {
+            let q = Quaternion.ToArray(quat);
+            return new Matrix([
+                [2 * (q[0] * q[0] + q[1] * q[1]) - 1,   2 * (q[1] * q[2] - q[0] * q[3]),        2 * (q[1] * q[3] + q[0] * q[2])],
+                [2 * (q[1] * q[2] + q[0] * q[3]),       2 * (q[0] * q[0] + q[2] * q[2]) - 1,    2 * (q[2] * q[3] - q[0] * q[1])],
+                [2 * (q[1] * q[3] - q[0] * q[2]),       2 * (q[2] * q[3] + q[0] * q[1]),        2 * (q[0] * q[0] + q[3] * q[3]) - 1],
+            ]);
+        }
+
+
     }
 }
