@@ -235,6 +235,10 @@ namespace VQME {
             q.z /= mag;
         }
 
+        Normalised() {
+            
+        }
+
         //create a vector 3 from a quaternion in 3-2-1 format
         static ToEulerAngles(q: Quaternion) {
             // roll (x-axis rotation)
@@ -255,12 +259,16 @@ namespace VQME {
             return [nx, ny, nz];
         }
 
-        static ToArray(q: Quaternion) {
-            return [q.w, q.x, q.y, q.z];
+        ToEulerAngles() {
+            return Quaternion.ToEulerAngles(this);
         }
 
-        static ToRotationMatrix(quat: Quaternion) {
-            let q = Quaternion.ToArray(quat);
+        ToArray() {
+            return [this.w, this.x, this.y, this.z];
+        }
+
+        ToRotationMatrix() {
+            let q = this.ToArray();
             return new Matrix([
                 [2 * (q[0] * q[0] + q[1] * q[1]) - 1,   2 * (q[1] * q[2] - q[0] * q[3]),        2 * (q[1] * q[3] + q[0] * q[2])],
                 [2 * (q[1] * q[2] + q[0] * q[3]),       2 * (q[0] * q[0] + q[2] * q[2]) - 1,    2 * (q[2] * q[3] - q[0] * q[1])],
