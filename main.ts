@@ -2,16 +2,78 @@
 namespace VQME {
 
     export function RotateVec(lhs: Quaternion, rhs: Vec3) {
+        let qsame = new Quaternion(lhs.w, lhs.x, lhs.y, lhs.z);
+        let qvec = new Quaternion(0, rhs.x, rhs.y, rhs.z);
+        //let qinv = qsame.Conjugate();
+        let qinv = new Quaternion(qsame.w, -qsame.x, -qsame.y, -qsame.z);
 
+        let first = RotateQ(qvec, qsame)
+        let second = RotateQ(qinv, first);
+        return new Vec3(second.x, second.y, second.z);
     }
-    
-    export function RotateQuat(lhs: Quaternion, rhs: Quaternion) {
-        let nqw = rhs.w * lhs.w - rhs.x * lhs.x - rhs.y * lhs.y - rhs.z * lhs.z;
-        let nqx = rhs.w * lhs.x + rhs.x * lhs.w - rhs.y * lhs.z + rhs.z * lhs.y;
-        let nqy = rhs.w * lhs.y + rhs.x * lhs.z + rhs.y * lhs.w - rhs.z * lhs.x;
-        let nqz = rhs.w * lhs.z - rhs.x * lhs.y + rhs.y * lhs.x + rhs.z * lhs.w;
+
+    export function Dot3(lhs: Vec3, rhs: Vec3) {
+        return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
+    }
+
+    export function Cross3(lhs: Vec3, rhs: Vec3) {
+        let nx = lhs.y * rhs.z - lhs.z * rhs.y;
+        let ny = lhs.z * rhs.x - lhs.x * rhs.z;
+        let nz = lhs.x * rhs.y - lhs.y * rhs.x;
+        return new Vec3(nx, ny, nz);
+    }
+
+    export function RotateQ(lhs: Quaternion, rhs: Quaternion) {
+        let a = lhs;
+        let b = rhs;
+
+        let nqw = a.w * b.w - a.x * b.x - a.y * b.y - a.z * b.z;
+        let nqx = a.w * b.x + a.x * b.w + a.y * b.z - a.z * b.y;
+        let nqy = a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x;
+        let nqz = a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w;
 
         return new VQME.Quaternion(nqw, nqx, nqy, nqz);
+    }
+
+    //add two vectors together
+    export function Add3(lhs: Vec3, rhs: Vec3) {
+        return new Vec3(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
+    }
+
+    //subtract vector from a vector
+    export function Subtract3(lhs: Vec3, rhs: Vec3) {
+        return new Vec3(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);
+    }
+
+    //multiply a vector by a scalar
+    export function Multiply3(v: Vec3, s: number) {
+        return new Vec3(v.x * s, v.y * s, v.z * s);
+    }
+
+    //divide a vector by a scalar
+    export function Divide3(v: Vec3, s: number) {
+        return new Vec3(v.x / s, v.y / s, v.z / s);
+    }
+
+    //find the distance between two vectors squared (faster than Distance() ** 2)
+    export function SqrDistance3(posA: Vec3, posB: Vec3) {
+        return ((posA.x - posB.x) ** 2) + ((posA.y - posB.y) ** 2) + ((posA.z - posB.z) ** 2);
+    }
+
+    //find the distance between two vectors
+    export function Distance3(posA: Vec3, posB: Vec3) {
+        return Math.sqrt(SqrDistance3(posA, posB));
+    }
+
+    //get the dot product of two vectors divided by both their magnitudes
+    export function Dot3Norm(lhs: Vec3, rhs: Vec3) {
+        let doublemag = lhs.Magnitude() * rhs.Magnitude();
+        return (Dot3(lhs, rhs) / doublemag);
+    }
+
+    //returns the angle between two vectors
+    export function Angle(lhs: Vec3, rhs: Vec3) {
+        return Math.acos(Dot3Norm(lhs, rhs));
     }
 
     export class Vec3 {
@@ -25,8 +87,8 @@ namespace VQME {
             this.z = z;
         }
 
-        One = new Vec3(1, 1, 1);
-        Zero = new Vec3(0, 0, 0);
+        static One = new Vec3(1, 1, 1);
+        static Zero = new Vec3(0, 0, 0);
 
         //convert to string
         ToString() {
@@ -36,6 +98,10 @@ namespace VQME {
         //conver this to an array
         ToArray() {
             return [this.x, this.y, this.z];
+        }
+
+        DistanceTo(other: Vec3) {
+            return Distance3(this, other);
         }
 
         //gets the magnitude/length of this vector
@@ -48,7 +114,7 @@ namespace VQME {
             return (this.x ** 2) + (this.y ** 2) + (this.z ** 2);
         }
 
-        //normalise this vector (magnitude/length of 1)  
+        //normalise this vector (magnitude/length of 1)
         Normalise() {
             let mag = this.Magnitude();
             this.x /= mag;
@@ -65,10 +131,10 @@ namespace VQME {
 
         //return a copy of this vector scaled by a number
         Times(scale: number) {
-            return Vec3.Multiply(this, scale);
+            return Multiply3(this, scale);
         }
 
-        //return a copy of this vector scaled differently on x y and z 
+        //return a copy of this vector scaled differently on x y and z
         VTimes(scale: Vec3) {
             return new Vec3(this.x * scale.x, this.y * scale.y, this.z * scale.z);
         }
@@ -99,54 +165,13 @@ namespace VQME {
             return new Vec3(this.x + pos.x, this.y + pos.y, this.z + pos.z);
         }
 
-
-        //add two vectors together
-        static Add(lhs: Vec3, rhs: Vec3) {
-            return new Vec3(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
+        DotWith(other: Vec3) {
+            return Dot3(this, other);
         }
 
-        //subtract vector from a vector
-        static Subtract(lhs: Vec3, rhs: Vec3) {
-            return new Vec3(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);
+        WithDot(other: Vec3) {
+            return Dot3(other, this);
         }
-
-        //multiply a vector by a scalar
-        static Multiply(v: Vec3, s: number) {
-            return new Vec3(v.x * s, v.y * s, v.z * s);
-        }
-
-        //divide a vector by a scalar
-        static Divide(v: Vec3, s: number) {
-            return new Vec3(v.x / s, v.y / s, v.z / s);
-        }
-
-        //find the distance between two vectors squared (faster than Distance() ** 2)
-        static SqrDistance(posA: Vec3, posB: Vec3) {
-            return ((posA.x - posB.x) ** 2) + ((posA.y - posB.y) ** 2) + ((posA.z - posB.z) ** 2);
-        }
-
-        //find the distance between two vectors
-        static Distance(posA: Vec3, posB: Vec3) {
-            return Math.sqrt(Vec3.SqrDistance(posA, posB));
-        }
-
-        //get the dot product of two vectors
-        static Dot(lhs: Vec3, rhs: Vec3) {
-            return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
-        }
-
-        //get the dot product of two vectors divided by both their magnitudes
-        static DotNorm(lhs: Vec3, rhs: Vec3) {
-            let doublemag = lhs.Magnitude() * rhs.Magnitude();
-            return (Vec3.Dot(lhs, rhs) / doublemag);
-        }
-
-        //returns the angle between two vectors
-        static Angle(lhs: Vec3, rhs: Vec3) {
-            return Math.acos(Vec3.DotNorm(lhs, rhs));
-        }
-
-        //cross to be implemented   
     }
 
     export class Matrix {
@@ -193,12 +218,12 @@ namespace VQME {
         }
 
         //rotate lhs by rhs
-        static Multiply(lhs: Quaternion, rhs: Quaternion) {
-            let newW = lhs.w * rhs.w - lhs.x * rhs.x - lhs.y * rhs.y - lhs.z * rhs.z;
-            let newX = lhs.w * rhs.x + lhs.x * rhs.w + lhs.y * rhs.z - lhs.z * rhs.y;
-            let newY = lhs.w * rhs.y - lhs.x * rhs.z + lhs.y * rhs.w + lhs.z * rhs.x;
-            let newZ = lhs.w * rhs.z + lhs.x * rhs.y - lhs.y * rhs.x + lhs.z * rhs.w;
-            return new Quaternion(newW, newX, newY, newZ);
+        TimesOther(other: Quaternion) {
+            return RotateQ(this, other);
+        }
+
+        OtherTimes(other: Quaternion) {
+            return RotateQ(other, this);
         }
 
         //create a quaternion from x y and z rotations in 3-2-1 format
@@ -236,7 +261,25 @@ namespace VQME {
         }
 
         Normalised() {
-            
+            let q = new Quaternion(this.w, this.x, this.y, this.z);
+            let mag = q.Magnitude();
+            q.w /= mag;
+            q.x /= mag;
+            q.y /= mag;
+            q.z /= mag;
+            return q;
+        }
+
+        Normalise() {
+            let mag = this.Magnitude();
+            this.w /= mag;
+            this.x /= mag;
+            this.y /= mag;
+            this.z /= mag;
+        }
+
+        Conjugate() {
+            return new Quaternion(this.w, -this.x, -this.y, -this.z);
         }
 
         //create a vector 3 from a quaternion in 3-2-1 format
@@ -270,9 +313,9 @@ namespace VQME {
         ToRotationMatrix() {
             let q = this.ToArray();
             return new Matrix([
-                [2 * (q[0] * q[0] + q[1] * q[1]) - 1,   2 * (q[1] * q[2] - q[0] * q[3]),        2 * (q[1] * q[3] + q[0] * q[2])],
-                [2 * (q[1] * q[2] + q[0] * q[3]),       2 * (q[0] * q[0] + q[2] * q[2]) - 1,    2 * (q[2] * q[3] - q[0] * q[1])],
-                [2 * (q[1] * q[3] - q[0] * q[2]),       2 * (q[2] * q[3] + q[0] * q[1]),        2 * (q[0] * q[0] + q[3] * q[3]) - 1],
+                [2 * (q[0] * q[0] + q[1] * q[1]) - 1, 2 * (q[1] * q[2] - q[0] * q[3]), 2 * (q[1] * q[3] + q[0] * q[2])],
+                [2 * (q[1] * q[2] + q[0] * q[3]), 2 * (q[0] * q[0] + q[2] * q[2]) - 1, 2 * (q[2] * q[3] - q[0] * q[1])],
+                [2 * (q[1] * q[3] - q[0] * q[2]), 2 * (q[2] * q[3] + q[0] * q[1]), 2 * (q[0] * q[0] + q[3] * q[3]) - 1],
             ]);
         }
 
