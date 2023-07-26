@@ -171,6 +171,10 @@ namespace VQME {
         WithDot(other: Vec3) {
             return Dot3(other, this);
         }
+
+        FormatToV4Matrix() {
+            return new Matrix([[this.x], [this.y], [this.z], [1]]);
+        }
     }
 
     export class Matrix {
@@ -313,7 +317,8 @@ namespace VQME {
 
         //untested
         ToRotationMatrix() {
-            let q = this.ToArray();
+            let q = this.ToArray(); //wxyz? xyzw?
+            //let q = [qte[1], qte[2], qte[3], qte[0]];
             return new Matrix([
                 [2 * (q[0] * q[0] + q[1] * q[1]) - 1, 2 * (q[1] * q[2] - q[0] * q[3]), 2 * (q[1] * q[3] + q[0] * q[2])],
                 [2 * (q[1] * q[2] + q[0] * q[3]), 2 * (q[0] * q[0] + q[2] * q[2]) - 1, 2 * (q[2] * q[3] - q[0] * q[1])],
@@ -321,8 +326,49 @@ namespace VQME {
             ]);
         }
 
+        ToRotationMatrix4() {
+            let mat33 = this.ToRotationMatrix();
+            let m3 = mat33.values;
+            let mat44 = new Matrix([
+                [m3[0][0], m3[0][1], m3[0][2], 0],
+                [m3[1][0], m3[1][1], m3[1][2], 0],
+                [m3[2][0], m3[2][1], m3[2][2], 0],
+                [0, 0, 0, 1]
+            ])
+            return mat44;
+        }
+
         ToString() {
             return "[" + this.w + ", " + this.x + ", " + this.y + ", " + this.z + "]";
+        }
+    }
+}
+
+namespace DFCam {
+    export class Camera {
+        position: VQME.Vec3;
+        rotation: VQME.Quaternion;
+        fov: number;
+        aspectRatio: number;
+        zNear: number;
+        zFar: number;
+
+        ViewMatrix() {
+            return new VQME.Matrix([
+                [1, 0, 0, -this.position.x],
+                [0, 1, 0, -this.position.y],
+                [0, 0, 1, -this.position.z],
+                [0, 0, 0, 1],
+            ])
+        }
+
+        RotationMatrix() {
+            let inv = new VQME.Quaternion(this.rotation.w, -this.rotation.x, -this.rotation.y, -this.rotation.z);
+            return inv.ToRotationMatrix4();
+        }
+
+        GetPerspectiveProjectionMatrix() {
+            
         }
     }
 }
