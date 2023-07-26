@@ -196,10 +196,12 @@ namespace VQME {
             return new Matrix(m);
         }
 
-        static display(m: Matrix) {
-            for (let s = 0; s < m.values.length; ++s) {
-                console.log(m.values[s].join(' '));
+        ToString() {
+            let outStr = "";
+            for (let s = 0; s < this.values.length; ++s) {
+                outStr += this.values[s].join(' ') + "\n";
             }
+            return outStr;
         }
     }
 
@@ -217,12 +219,12 @@ namespace VQME {
         }
 
         //rotate lhs by rhs
-        TimesOther(other: Quaternion) {
-            return RotateQ(this, other);
+        RotateFirst(other: Quaternion) {
+            return RotateQ(other, this);
         }
 
-        OtherTimes(other: Quaternion) {
-            return RotateQ(other, this);
+        RotateSecond(other: Quaternion) {
+            return RotateQ(this, other);
         }
 
         //create a quaternion from x y and z rotations in 3-2-1 format
@@ -243,7 +245,7 @@ namespace VQME {
         }
 
         //create a quaternion from a vector3 (3-2-1)
-        static FromEulerAnglesVec(vec: Vec3) {
+        static FromEulerAnglesVec3(vec: Vec3) {
             return Quaternion.FromEulerAngles(vec.x, vec.y, vec.z);
         }
 
@@ -309,6 +311,7 @@ namespace VQME {
             return [this.w, this.x, this.y, this.z];
         }
 
+        //untested
         ToRotationMatrix() {
             let q = this.ToArray();
             return new Matrix([
@@ -318,8 +321,8 @@ namespace VQME {
             ]);
         }
 
-        static Display(q: Quaternion) {
-            console.log("w: " + q.w + ", x: " + q.x + ", y: " + q.y + ", z: " + q.z);
+        ToString() {
+            return "[" + this.w + ", " + this.x + ", " + this.y + ", " + this.z + "]";
         }
     }
 }
