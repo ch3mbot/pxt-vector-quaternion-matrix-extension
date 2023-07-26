@@ -7,9 +7,8 @@ namespace VQME {
         //let qinv = qsame.Conjugate();
         let qinv = new Quaternion(qsame.w, -qsame.x, -qsame.y, -qsame.z);
 
-        let first = RotateQ(qvec, qsame)
-        let second = RotateQ(qinv, first);
-        return new Vec3(second.x, second.y, second.z);
+        let qoutq = VQME.RotateQ(qsame, VQME.RotateQ(qvec, qinv));
+        return new Vec3(qoutq.x, qoutq.y, qoutq.z);
     }
 
     export function Dot3(lhs: Vec3, rhs: Vec3) {
