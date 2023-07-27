@@ -153,15 +153,27 @@ namespace VQME {
         }
 
         //add a vector to this vector
-        Plus(pos: Vec3) {
+        PlusEquals(pos: Vec3) {
             this.x += pos.x;
             this.y += pos.y;
             this.z += pos.z;
         }
 
         //return a copy of this vector with another vector added on
-        PlusEquals(pos: Vec3) {
+        Plus(pos: Vec3) {
             return new Vec3(this.x + pos.x, this.y + pos.y, this.z + pos.z);
+        }
+
+        //add a vector to this vector
+        MinusEquals(pos: Vec3) {
+            this.x -= pos.x;
+            this.y -= pos.y;
+            this.z -= pos.z;
+        }
+
+        //return a copy of this vector with another vector added on
+        Minus(pos: Vec3) {
+            return new Vec3(this.x - pos.x, this.y - pos.y, this.z - pos.z);
         }
 
         DotWith(other: Vec3) {
@@ -352,6 +364,8 @@ namespace DFCam {
         aspectRatio: number;
         zNear: number;
         zFar: number;
+        screenWidth: number;
+        screenHeight: number;
 
         ViewMatrix() {
             return new VQME.Matrix([
@@ -367,8 +381,27 @@ namespace DFCam {
             return inv.ToRotationMatrix4();
         }
 
-        GetPerspectiveProjectionMatrix() {
-            
+        PerspectiveProjectionMatrix() {
+            let invtanfov = 1 / Math.tan(this.fov / 2);
+            let invasp = invtanfov / this.aspectRatio;
+
+            let zdiff = (this.zNear - this.zFar);
+            let m33 = (this.zFar + this.zNear) / zdiff;
+            let m43 = (this.zNear * this.zFar * 2) / zdiff;
+
+            return new VQME.Matrix([
+                [invasp, 0, 0, 0],
+                [0, invtanfov, 0, 0],
+                [0, 0, m33, -1],
+                [0, 0, m43, 0]
+            ]);
+        }
+
+        ClipToScreenPoint(point: VQME.Matrix) {
+            let divisor = point.values[3][0] * 2;
+            let screenX = (point.values[0][0] + 1) * this.screenWidth / divisor;
+            let screenY = (-point.values[1][0] + 1) * this.screenHeight / divisor;
+            return new VQME.Vec3(screenX, screenY, 0); //make vec2 class
         }
     }
 }
