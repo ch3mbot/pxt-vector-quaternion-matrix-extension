@@ -54,14 +54,29 @@ namespace VQME {
         return new Vec3(v.x / s, v.y / s, v.z / s);
     }
 
+    export function Multiply2(v: Vec2, s: number) {
+        return new Vec2(v.x * s, v.y * s);
+    }
+
     //find the distance between two vectors squared (faster than Distance() ** 2)
     export function SqrDistance3(posA: Vec3, posB: Vec3) {
         return ((posA.x - posB.x) ** 2) + ((posA.y - posB.y) ** 2) + ((posA.z - posB.z) ** 2);
     }
 
+
+    //find the distance between two vectors squared (faster than Distance() ** 2)
+    export function SqrDistance2(posA: Vec2, posB: Vec2) {
+        return ((posA.x - posB.x) ** 2) + ((posA.y - posB.y) ** 2);
+    }
+
     //find the distance between two vectors
     export function Distance3(posA: Vec3, posB: Vec3) {
         return Math.sqrt(SqrDistance3(posA, posB));
+    }
+
+    //find the distance between two vectors
+    export function Distance2(posA: Vec2, posB: Vec2) {
+        return Math.sqrt(SqrDistance2(posA, posB));
     }
 
     //get the dot product of two vectors divided by both their magnitudes
@@ -186,6 +201,109 @@ namespace VQME {
 
         FormatToV4Matrix() {
             return new Matrix([[this.x], [this.y], [this.z], [1]]);
+        }
+    }
+    export class Vec2 {
+        x: number;
+        y: number;
+        z: number;
+
+        constructor(x: number, y: number) {
+            this.x = x;
+            this.y = y;
+        }
+
+        static One = new Vec2(1, 1);
+        static Zero = new Vec2(0, 0);
+
+        //convert to string
+        ToString() {
+            return "(" + this.x + ", " + this.y + ")";
+        }
+
+        //conver this to an array
+        ToArray() {
+            return [this.x, this.y];
+        }
+
+        DistanceTo(other: Vec2) {
+            return Distance2(this, other);
+        }
+
+        //gets the magnitude/length of this vector
+        Magnitude() {
+            return Math.sqrt(this.SqrMagnitude());
+        }
+
+        //gets the magnitude/length of this vector squared. faster than Magnitude() ** 2
+        SqrMagnitude() {
+            return (this.x ** 2) + (this.y ** 2);
+        }
+
+        //normalise this vector (magnitude/length of 1)
+        Normalise() {
+            let mag = this.Magnitude();
+            this.x /= mag;
+            this.y /= mag;
+        }
+
+        //return a normalised copy of this vector (magnitude/length of 1)
+        Normalised() {
+            let mag = this.Magnitude();
+            return new Vec2(this.x / mag, this.y / mag);
+        }
+
+
+        //return a copy of this vector scaled by a number
+        Times(scale: number) {
+            return Multiply2(this, scale);
+        }
+
+        //return a copy of this vector scaled differently on x y and z
+        VTimes(scale: Vec2) {
+            return new Vec2(this.x * scale.x, this.y * scale.y);
+        }
+
+        //scale this vector by a number
+        TimesEquals(scale: number) {
+            this.x *= scale;
+            this.y *= scale;
+            this.z *= scale;
+        }
+
+        //scale this vector differently on x y and z
+        VTimesEquals(scale: Vec2) {
+            this.x *= scale.x;
+            this.y *= scale.y;
+            this.z *= scale.z;
+        }
+
+        //add a vector to this vector
+        PlusEquals(pos: Vec2) {
+            this.x += pos.x;
+            this.y += pos.y;
+            this.z += pos.z;
+        }
+
+        //return a copy of this vector with another vector added on
+        Plus(pos: Vec2) {
+            return new Vec2(this.x + pos.x, this.y + pos.y);
+        }
+
+        //add a vector to this vector
+        MinusEquals(pos: Vec2) {
+            this.x -= pos.x;
+            this.y -= pos.y;
+            this.z -= pos.z;
+        }
+
+        //return a copy of this vector with another vector added on
+        Minus(pos: Vec2) {
+            return new Vec2(this.x - pos.x, this.y - pos.y);
+        }
+
+        ToVec3(z: number) {
+            return new Vec3(this.x, this.y, z);
         }
     }
 
@@ -402,6 +520,51 @@ namespace DFCam {
             let screenX = (point.values[0][0] + 1) * this.screenWidth / divisor;
             let screenY = (-point.values[1][0] + 1) * this.screenHeight / divisor;
             return new VQME.Vec3(screenX, screenY, 0); //make vec2 class
+        }
+    }
+
+    export class MeshInfo {
+        vertices: VQME.Vec3[];
+        triangles: number[];
+        uvs: VQME.Vec2[];
+        texture: number[];
+    }
+
+    export class Ob3 {
+        position: VQME.Vec3;
+        rotation: VQME.Quaternion;
+
+        info: MeshInfo;
+        rotatedVerts: VQME.Vec3[];
+        transformedVerts: VQME.Vec3[];
+        
+        constructor(position: VQME.Vec3, rotation: VQME.Quaternion, info: MeshInfo) {
+            this.position = position;
+            this.rotation = rotation;
+            this.info = info;
+            this.rotatedVerts = [];
+            this.transformedVerts = [];
+
+            this.rotatedVerts.length = info.vertices.length;
+            this.transformedVerts.length = info.vertices.length;
+
+            this.UpdateTransformedVecs();
+        }
+
+        Rotate(change: VQME.Quaternion) {
+            this.rotation = VQME.RotateQ(this.rotation, change);
+            this.UpdateTransformedVecs();
+        }
+
+        UpdateTransformedVecs() {
+            for (let i = 0; i < this.info.vertices.length; i++) {
+                this.rotatedVerts[i] = VQME.RotateVec(this.rotation, this.info.vertices[i]);
+                this.transformedVerts[i] = this.rotatedVerts[i].Plus(this.position);
+            }
+        }
+
+        static Instantiate(prefab: Ob3, position: VQME.Vec3, rotation: VQME.Quaternion) {
+            return 
         }
     }
 }
