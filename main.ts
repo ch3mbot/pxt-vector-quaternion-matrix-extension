@@ -476,7 +476,70 @@ namespace VQME {
     }
 }
 
-namespace DFCam {
+namespace DFPoly {
+
+    //cull vertices based on world space
+    export function PreScreenCull(info: MeshInfo, cam: Camera) {
+        let newTrigs: number[];
+
+        for(let i = 0; i < info.triangles.length; i += 3) {
+            let currentTrig = info.GetTrigAtIndex(i);
+            if (!BackfaceCull(currentTrig, cam)) {
+                newTrigs.length += 3;
+                newTrigs[i + 0] = info.triangles[i + 0];
+                newTrigs[i + 1] = info.triangles[i + 1];
+                newTrigs[i + 2] = info.triangles[i + 2];
+            }
+        }
+        
+        return newTrigs;
+    }
+
+    //implement with edge cases later
+    export function ClipPoly(trig: VQME.Vec3[], cam: Camera) {
+        let output = { rejected: false, outTrigs: [new VQME.Vec3(0, 0, 0)] }
+        let outCount = 0;
+        let outInds = 0;
+        for(let i = 0; i <3 ; i++) {
+            let curr = trig[i];
+            if (curr.z > cam.zFar || curr.z < cam.zNear) {
+                outCount += 1;
+                outInds |= 1 << i;
+            } else if (curr.x > 1 || curr.x < 0 || curr.y > 1 || curr.y < 0) {
+                outCount += 1;
+                outInds |= 1 << i;
+            }
+        }
+        //trivial accept and trivial reject
+        if (outCount == 0) {
+            output.outTrigs = trig;
+        }
+        if (outCount == 3) {
+            output.rejected = true;
+        }
+        //for 1 and 2 consider edge cases
+        if(outCount == 2) {
+        
+        }
+        return output;
+    }
+
+    export function CalcTrigNormal(trig: VQME.Vec3[]) {
+        let U = trig[1].Minus(trig[0]);
+        let V = trig[2].Minus(trig[0]);
+
+        let nx = (U.y * V.z) - (U.z * V.y);
+        let ny = (U.z * V.x) - (U.x * V.z);
+        let nz = (U.x * V.y) - (U.y * V.x);
+
+        return new VQME.Vec3(nx, ny, nz);
+    }
+
+    //rejected is true if the forward and normal are same direction (>0)
+    export function BackfaceCull(trig: VQME.Vec3[], cam: Camera) {
+        return VQME.Dot3(cam.ForwardVec(), CalcTrigNormal(trig)) > 0;
+    }
+
     export class Camera {
         position: VQME.Vec3;
         rotation: VQME.Quaternion;
@@ -499,6 +562,10 @@ namespace DFCam {
         RotationMatrix() {
             let inv = new VQME.Quaternion(this.rotation.w, -this.rotation.x, -this.rotation.y, -this.rotation.z);
             return inv.ToRotationMatrix4();
+        }
+
+        ForwardVec() {
+            return VQME.RotateVec(this.rotation, new VQME.Vec3(0, 0, 1))
         }
 
         PerspectiveProjectionMatrix() {
@@ -530,6 +597,21 @@ namespace DFCam {
         triangles: number[];
         uvs: VQME.Vec2[];
         texture: number[];
+
+        constructor(vertices: VQME.Vec3[], triangles: number[], uvs: VQME.Vec2[], texture: number[]) {
+            this.vertices = vertices;
+            this.triangles = triangles;
+            this.uvs = uvs;
+            this.texture = texture;
+        }
+
+        static Copy(mesh: MeshInfo) {
+            return new MeshInfo(mesh.vertices, mesh.triangles, mesh.uvs, mesh.texture)
+        }
+
+        GetTrigAtIndex(index: number){
+            return [this.vertices[this.triangles[index]], this.vertices[this.triangles[index + 1]], this.vertices[this.triangles[index + 2]]];
+        }
     }
 
     export class Ob3 {
@@ -537,13 +619,19 @@ namespace DFCam {
         rotation: VQME.Quaternion;
 
         info: MeshInfo;
+        
         rotatedVerts: VQME.Vec3[];
         transformedVerts: VQME.Vec3[];
-        
+
+        boundingMin: VQME.Vec3;
+        boundingMax: VQME.Vec3;
+
         constructor(position: VQME.Vec3, rotation: VQME.Quaternion, info: MeshInfo) {
             this.position = position;
             this.rotation = rotation;
+            
             this.info = info;
+
             this.rotatedVerts = [];
             this.transformedVerts = [];
 
@@ -561,12 +649,48 @@ namespace DFCam {
         UpdateTransformedVecs() {
             for (let i = 0; i < this.info.vertices.length; i++) {
                 this.rotatedVerts[i] = VQME.RotateVec(this.rotation, this.info.vertices[i]);
-                this.transformedVerts[i] = this.rotatedVerts[i].Plus(this.position);
+                let tvert = this.rotatedVerts[i].Plus(this.position);
+                this.transformedVerts[i] = tvert;
             }
+        }
+
+        RecalculateBoundingBox() {
+            let minx = 99999;
+            let maxx = -99999;
+            let miny = 99999;
+            let maxy = -99999;
+            let minz = 99999;
+            let maxz = -99999;
+
+            for(let i = 0; i < this.transformedVerts.length; i++) {
+                let tvert = this.transformedVerts[i];
+                if (tvert.x > maxx) maxx = tvert.x;
+                if (tvert.x < minx) minx = tvert.x;
+                if (tvert.y > maxy) maxy = tvert.y;
+                if (tvert.y < miny) miny = tvert.y;
+                if (tvert.z > maxz) maxz = tvert.z;
+                if (tvert.z < minz) minz = tvert.z;
+            }
+
+            this.boundingMin = new VQME.Vec3(minx, miny, minz);
+            this.boundingMax = new VQME.Vec3(maxx, maxy, maxz);
         }
 
         static Instantiate(prefab: Ob3, position: VQME.Vec3, rotation: VQME.Quaternion) {
             return 
+        }
+    }
+
+    export class MeshInfoStorer {
+        static meshRegistry: {[key: string] : MeshInfo} = { };
+
+        static AddToDict(key: string, mesh: MeshInfo) {
+            MeshInfoStorer.meshRegistry[key] = MeshInfo.Copy(mesh);
+        }
+
+        static GetCopyFromDict(key: string) {
+            let mesh = MeshInfoStorer.meshRegistry[key];
+            return MeshInfo.Copy(mesh);
         }
     }
 }
