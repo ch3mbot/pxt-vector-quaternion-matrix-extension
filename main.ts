@@ -352,6 +352,8 @@ namespace VQME {
             this.z = z;
         }
 
+        static Identity = new Quaternion(1, 0, 0, 0);
+
         //rotate lhs by rhs
         RotateFirst(other: Quaternion) {
             return RotateQ(other, this);
