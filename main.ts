@@ -480,15 +480,17 @@ namespace DFPoly {
 
     //cull vertices based on world space
     export function PreScreenCull(info: MeshInfo, cam: Camera) {
-        let newTrigs: number[];
+        let newTrigs: number[] = [];
+        let nind = 0;
 
         for(let i = 0; i < info.triangles.length; i += 3) {
             let currentTrig = info.GetTrigAtIndex(i);
             if (!BackfaceCull(currentTrig, cam)) {
                 newTrigs.length += 3;
-                newTrigs[i + 0] = info.triangles[i + 0];
-                newTrigs[i + 1] = info.triangles[i + 1];
-                newTrigs[i + 2] = info.triangles[i + 2];
+                newTrigs[nind + 0] = info.triangles[i + 0];
+                newTrigs[nind + 1] = info.triangles[i + 1];
+                newTrigs[nind + 2] = info.triangles[i + 2];
+                nind += 3;
             }
         }
         
@@ -643,6 +645,11 @@ namespace DFPoly {
 
         Rotate(change: VQME.Quaternion) {
             this.rotation = VQME.RotateQ(this.rotation, change);
+            this.UpdateTransformedVecs();
+        }
+
+        Translate(change: VQME.Vec3) {
+            this.position.PlusEquals(change);
             this.UpdateTransformedVecs();
         }
 
