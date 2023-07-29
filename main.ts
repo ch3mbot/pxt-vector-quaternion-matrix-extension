@@ -478,8 +478,8 @@ namespace VQME {
 
 namespace DFPoly {
 
-    //cull vertices based on world space
-    export function PreScreenCull(info: MeshInfo, cam: Camera) {
+    //cull vertices based on clip space
+    export function ClipspaceCull(info: MeshInfo, cam: Camera) {
         let newTrigs: number[] = [];
         let nind = 0;
 
