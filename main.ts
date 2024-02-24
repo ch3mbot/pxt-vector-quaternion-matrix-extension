@@ -590,7 +590,8 @@ namespace DFPoly {
             let divisor = point.values[3][0] * 2;
             let screenX = (point.values[0][0] + 1) * this.screenWidth / divisor;
             let screenY = (-point.values[1][0] + 1) * this.screenHeight / divisor;
-            return new VQME.Vec3(screenX, screenY, 0); //make vec2 class
+            let screenZ = (point.values[2][0]) * 2 / divisor;
+            return new VQME.Vec3(screenX, screenY, screenZ); //make vec2 class
         }
     }
 
