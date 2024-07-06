@@ -14,6 +14,7 @@ namespace VQME {
     export function Dot3(lhs: Vec3, rhs: Vec3) {
         return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
     }
+    
 
     export function Cross3(lhs: Vec3, rhs: Vec3) {
         let nx = lhs.y * rhs.z - lhs.z * rhs.y;
