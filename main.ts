@@ -1,16 +1,64 @@
-//Vector Quaternion Matrix Extension
+/**
+ * Vector Quaternion Matrix Extension
+ * Defines Vector3, Vector2, Quaternion, Matrix, and several operations.
+ * 
+ * #TODO fix 'vector' and 'quaternion' capitalization in comments
+ * #TDOO test efficiency of V2 vs V3 method of manipulation
+ * #TODO decide if classes should have fancy comments, or if all code should use simpler comments
+ * #TODO normalise quaternions before doing rotations? may be inefficient. 
+ * #TODO finish VQME.rotateVector3Compound
+ */
 namespace VQME {
-    export function RotateVector3(lhs: Quaternion, rhs: Vector3) {
-        let qsame = new Quaternion(lhs.w, lhs.x, lhs.y, lhs.z);
-        let qvec = new Quaternion(0, rhs.x, rhs.y, rhs.z);
+    /**
+     * Rotate Vector3 by quaternion.
+     * @param quaternion The Quaternion representing the rotation.
+     * @param vector The vector to be rotated
+     * @returns A new Vector3 corresponding to the rotated vector. 
+     */
+    export function rotateVector3(quaternion: Quaternion, vector: Vector3): Vector3 {
+        let qsame = new Quaternion(quaternion.w, quaternion.x, quaternion.y, quaternion.z);
+        let qvec = new Quaternion(0, vector.x, vector.y, vector.z);
         //let qinv = qsame.Conjugate();
         let qinv = new Quaternion(qsame.w, -qsame.x, -qsame.y, -qsame.z);
 
-        let qoutq = VQME.RotateQuaternion(qsame, VQME.RotateQuaternion(qvec, qinv));
+        let qoutq = VQME.rotateQuaternion(qsame, VQME.rotateQuaternion(qvec, qinv));
         return new Vector3(qoutq.x, qoutq.y, qoutq.z);
     }
 
-    export function RotateQuaternion(lhs: Quaternion, rhs: Quaternion) {
+    /** Rotate a vector3 by multiple quaternions, in the order of the array. */
+    //#FIXME not done yet
+    export function rotateVector3Compound(vector: Vector3, ...quaternions: Quaternion[]) {
+        let result = vector.clone();
+
+        for (let i = 0; i < quaternions.length; i++) {
+            let quatenrion = quaternions[i];
+            let q = quatenrion.normalised();
+            
+        }
+    }
+
+    /**
+     * Rotates a Vector2 counter clockwise.
+     * @param angle The angle in radians.
+     * @param vector The vector to be rotated.
+     * @returns A new Vector2 corresponding to the rotated vector.
+     */
+    export function rotateVector2(angle: number, vector: Vector2): Vector2 {
+        let cosTheta = Math.cos(angle);
+        let sinTheta = Math.sin(angle);
+        let x = vector.x * cosTheta - vector.y * sinTheta;
+        let y = vector.x * sinTheta + vector.y * cosTheta;
+        return new Vector2(x, y);
+    }
+
+    //#FIXME normalise them first?
+    /**
+     * Rotates a quaternion by another quaternion.
+     * @param lhs Left hand side Quaternion.
+     * @param rhs Right hand side Quaternion.
+     * @returns lhs rotated by rhs.
+     */
+    export function rotateQuaternion(lhs: Quaternion, rhs: Quaternion): Quaternion {
         let a = lhs;
         let b = rhs;
 
@@ -22,476 +70,500 @@ namespace VQME {
         return new VQME.Quaternion(nqw, nqx, nqy, nqz);
     }
 
-    // generic add function taking vector2s or vector3s. outputs V2 or V3 accordingly. #FIXME should probably just output Vector3 every time.
-    export function Add(lhs: Vector2 | Vector3, rhs: Vector2 | Vector3): Vector2 | Vector3 {
+
+    // #FIXME are all these overloads necessary? could just do V2 + V2 => V2, V3 + VA => V3
+    export function add(lhs: Vector, rhs: Vector): Vector;                          // VA + VA => VA
+    export function add(lhs: Vector2, rhs: Vector): Vector;                         // V2 + VA => VA
+    export function add(lhs: Vector2, rhs: Vector2): Vector2;                       // V2 + V2 => V2
+    export function add(lhs: Vector2, rhs: Vector3): Vector3;                       // V2 + V3 => V3
+    export function add(lhs: Vector3, rhs: Vector): Vector3;                        // V3 + VA => V3
+    export function add(lhs: Vector3, rhs: Vector2): Vector3;                       // V3 + V2 => V3
+    export function add(lhs: Vector3, rhs: Vector3): Vector3;                       // V3 + V3 => V3
+    /**
+     * Generic add function taking Vector2s or Vector3s. 
+     * Outputs Vector2 or Vector3 accordingly.
+     * @param lhs Left hand side vector.
+     * @param rhs Right hand side vector.
+     * @returns A new vector corresponding to the two vectors added together.
+     */
+    export function add(lhs: Vector, rhs: Vector): Vector {
         let x = lhs.x + rhs.x;
         let y = lhs.y + rhs.y;
+        let z = lhs.z + rhs.z;
 
-        let z = 0;
-        let output3 = false;
-
-        if (lhs instanceof Vector3) {
-            output3 = true;
-            z += lhs.z;
-        }
-        if (rhs instanceof Vector3) {
-            output3 = true;
-            z += rhs.z;
-        }
-
-        if (output3) {
+        if (lhs instanceof Vector3 || rhs instanceof Vector3)
             return new Vector3(x, y, z);
-        }
-
+        
         return new Vector2(x, y);
     }
 
-    // add two vector3s together
-    export function Add3(lhs: Vector3, rhs: Vector3): Vector3 {
-        return new Vector3(lhs.x + rhs.x, lhs.y + rhs.y, lhs.z + rhs.z);
-    }
-
-    // add two vector2s together
-    export function Add2(lhs: Vector2, rhs: Vector2): Vector2 {
-        return new Vector2(lhs.x + rhs.x, lhs.y + rhs.y);
-    }
-
-    // generic subtract function taking vector2s or vector3s. outputs V2 or V3 accordingly. #FIXME should probably just output Vector3 every time.
-    export function Subtract(lhs: Vector2 | Vector3, rhs: Vector2 | Vector3): Vector2 | Vector3 {
+    // #FIXME are all these overloads necessary? could just do V2 + V2 => V2, V3 + VA => V3
+    /**
+     * Generic subtract function taking Vector2s or Vector3s. 
+     * Outputs Vector2 or Vector3 accordingly.
+     * @param lhs Left hand side vector.
+     * @param rhs Right hand side vector.
+     * @returns A new vector corresponding to lhs minus rhs.
+     */
+    export function subtract(lhs: Vector, rhs: Vector): Vector;                         // VA + VA => VA
+    export function subtract(lhs: Vector2, rhs: Vector): Vector;                        // V2 + VA => VA
+    export function subtract(lhs: Vector2, rhs: Vector2): Vector2;                      // V2 + V2 => V2
+    export function subtract(lhs: Vector2, rhs: Vector3): Vector3;                      // V2 + V3 => V3
+    export function subtract(lhs: Vector3, rhs: Vector): Vector3;                       // V3 + VA => V3
+    export function subtract(lhs: Vector3, rhs: Vector2): Vector3;                      // V3 + V2 => V3
+    export function subtract(lhs: Vector3, rhs: Vector3): Vector3;                      // V3 + V3 => V3
+    export function subtract(lhs: Vector, rhs: Vector): Vector {
         let x = lhs.x - rhs.x;
         let y = lhs.y - rhs.y;
+        let z = lhs.z + rhs.z;
 
-        let z = 0;
-        let output3 = false;
-
-        if (lhs instanceof Vector3) {
-            output3 = true;
-            z += lhs.z;
-        }
-        if (rhs instanceof Vector3) {
-            output3 = true;
-            z -= rhs.z;
-        }
-
-        if (output3) {
+        if (lhs instanceof Vector3 || rhs instanceof Vector3) 
             return new Vector3(x, y, z);
+        
+        return new Vector2(x, y);
+    }
+
+    export function multiply(vector: Vector2, scalar: number): Vector2;
+    export function multiply(vector: Vector3, scalar: number): Vector3;
+    /**
+     * Generic multiply function taking vector2 or vector3 and scalar.
+     * Outputs Vector2 or Vector3 accordingly.
+     * @param vector The vector to scale.
+     * @param scalar The scalar to multiply the vector by.
+     * @returns A new Vector corresponding to the vector multiplied by the scalar.
+     */
+    export function multiply(vector: Vector, scalar: number): Vector {
+        let x = vector.x * scalar;
+        let y = vector.y * scalar;
+
+        if (vector instanceof Vector3) {
+            return new Vector3(x, y, vector.z * scalar);
         }
 
         return new Vector2(x, y);
     }
 
-    // subtract vecto3r from a vecto3r
-    export function Subtract3(lhs: Vector3, rhs: Vector3): Vector3 {
-        return new Vector3(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);
-    }
+    export function divide(vector: Vector2, scalar: number): Vector2;
+    export function divide(vector: Vector3, scalar: number): Vector3;
+    /**
+     * Generic divide function taking vector2 or vector3 and scalar.
+     * Outputs Vector2 or Vector3 accordingly.
+     * @param vector The vector to scale.
+     * @param scalar The scalar to divide the vector by.
+     * @returns A new Vector corresponding to the vector divided by the scalar.
+     */
+    export function divide(vector: Vector, scalar: number): Vector {
+        let x = vector.x / scalar;
+        let y = vector.y / scalar;
 
-    // subtract vecto2r from a vecto2r
-    export function Subtract2(lhs: Vector2, rhs: Vector2): Vector2 {
-        return new Vector2(lhs.x - rhs.x, lhs.y - rhs.y);
-    }
-
-    // generic multiply function taking vector2s or vector3s. outputs V2 or V3 accordingly. #FIXME could probably just output Vector3 every time.
-    export function Multiply(lhs: Vector2 | Vector3, rhs: number): Vector2 | Vector3 {
-        let x = lhs.x * rhs;
-        let y = lhs.y * rhs;
-
-        let z = 0;
-        let output3 = false;
-
-        if (lhs instanceof Vector3) {
-            output3 = true;
-            z = lhs.z * rhs;
-        }
-
-        if (output3) {
-            return new Vector3(x, y, z);
+        if (vector instanceof Vector3) {
+            return new Vector3(x, y, vector.z / scalar);
         }
 
         return new Vector2(x, y);
     }
 
-    // multiply a vector3 by a scalar
-    export function Multiply3(v: Vector3, s: number): Vector3 {
-        return new Vector3(v.x * s, v.y * s, v.z * s);
-    }
-
-    // multiply a vector2 by a scalar
-    export function Multiply2(v: Vector2, s: number): Vector2 {
-        return new Vector2(v.x * s, v.y * s);
-    }
-
-    // generic divide function taking vector2s or vector3s. outputs V2 or V3 accordingly. #FIXME could probably just output Vector3 every time.
-    export function Divide(lhs: Vector2 | Vector3, rhs: number): Vector2 | Vector3 {
-        let x = lhs.x / rhs;
-        let y = lhs.y / rhs;
-
-        let z = 0;
-        let output3 = false;
-
-        if (lhs instanceof Vector3) {
-            output3 = true;
-            z = lhs.z / rhs;
-        }
-
-        if (output3) {
-            return new Vector3(x, y, z);
-        }
-
-        return new Vector2(x, y);
-    }
-
-    // divide a vector3 by a scalar
-    export function Divide3(v: Vector3, s: number): Vector3 {
-        return new Vector3(v.x / s, v.y / s, v.z / s);
-    }
-
-    // divide a vector2 by a scalar
-    export function Divide2(v: Vector2, s: number): Vector2 {
-        return new Vector2(v.x / s, v.y / s);
-    }
-
-    // generic square distance function taking vector2s or vector3s.
-    export function SqrDistance(lhs: Vector2 | Vector3, rhs: Vector2 | Vector3): number {
+    /**
+     * Generic square distance function taking any combination of Vector2 and Vector3. 
+     * Faster than doing distance(lhs, rhs) ** 2.
+     * @param lhs Left hand side vector.
+     * @param rhs Right hand side vector.
+     * @returns The distance between two vectors squared. 
+     */
+    export function sqrDistance(lhs: Vector, rhs: Vector): number {
         let dx = lhs.x - rhs.x;
         let dy = lhs.y - rhs.y;
-        let dz = 0;
-
-        if (lhs instanceof Vector3)
-            dz += lhs.z;
-        if (rhs instanceof Vector3)
-            dz -= rhs.z;
+        let dz = lhs.z - rhs.z;
 
         return (dx ** 2) + (dy ** 2) + (dz ** 2);
     }
 
-    // find the distance between two vectors squared (faster than Distance() ** 2)
-    export function SqrDistance3(posA: Vector3, posB: Vector3): number {
-        return ((posA.x - posB.x) ** 2) + ((posA.y - posB.y) ** 2) + ((posA.z - posB.z) ** 2);
+    /** 
+     * Generic distance function taking any combination of vector2s and vector3s. 
+     * Returns the distance between two vectors. Consider if sqrDistance(lhs, rhs) is usable instead, as it is faster.
+    */
+    export function distance(lhs: Vector, rhs: Vector): number {
+        return Math.sqrt(sqrDistance(lhs, rhs));
     }
 
-    // find the distance between two vectors squared (faster than Distance() ** 2)
-    export function SqrDistance2(posA: Vector2, posB: Vector2): number {
-        return ((posA.x - posB.x) ** 2) + ((posA.y - posB.y) ** 2);
-    }
-
-    // generic distance function taking vector2s or vector3s.
-    export function Distance(lhs: Vector2 | Vector3, rhs: Vector2 | Vector3): number {
-        return Math.sqrt(SqrDistance(lhs, rhs));
-    }
-
-    // find the distance between two vector3s
-    export function Distance3(posA: Vector3, posB: Vector3): number {
-        return Math.sqrt(SqrDistance3(posA, posB));
-    }
-
-    // find the distance between two vector2s
-    export function Distance2(posA: Vector2, posB: Vector2): number {
-        return Math.sqrt(SqrDistance2(posA, posB));
-    }
-
-    // generic dot product function taking vector2s or vector3s.
-    // #FIXME should this be an overload with V2xV2 and V3xV3, or should we allow V2xV3?
-    export function Dot(lhs: Vector2 | Vector3, rhs: Vector2 | Vector3): number {
-        // just convert to vec3s and go from there. Dot2 is same as Dot3 with z=0.
-        let v3lhs: Vector3;
-        let v3rhs: Vector3;
-
-        if (lhs instanceof Vector2)
-            v3lhs = lhs.ToVector3();
-        else
-            v3lhs = lhs;
-        if (rhs instanceof Vector2)
-            v3rhs = rhs.ToVector3();
-        else
-            v3rhs = rhs;
-
-        return Dot3(v3lhs, v3rhs);
-    }
-
-    // get the dot product of two vector3s 
-    export function Dot3(lhs: Vector3, rhs: Vector3): number {
+    // #FIXME the comments for dot, dotNorm, and cross3 need improvement.
+    /**
+     * Generic dot product function taking any combination of vector2s and vector3s. 
+     * @param lhs Left hand side vector.
+     * @param rhs Right hand side vector.
+     * @returns lhs dot rhs.
+     */
+    export function dot(lhs: Vector, rhs: Vector): number {
         return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
     }
 
-    // get the dot product of two vector2s 
-    export function Dot2(lhs: Vector2, rhs: Vector2): number {
-        return lhs.x * rhs.x + lhs.y * rhs.y;
+    /**
+     * Generic normalised dot product function taking any combination of vector2s and vector3s. 
+     * @param lhs Left hand side vector.
+     * @param rhs Right hand side vector.
+     * @returns lhs dot rhs normalised.
+     */
+    export function dotNorm(lhs: Vector, rhs: Vector): number {
+        let doublemag = lhs.magnitude() * rhs.magnitude();
+        return dot(lhs, rhs) / doublemag;
     }
 
-    // generic normalised dot product function taking vector2s or vector3s.
-    export function DotNorm(lhs: Vector2 | Vector3, rhs: Vector2 | Vector3): number {
-        let doublemag = lhs.Magnitude() * rhs.Magnitude();
-        return Dot(lhs, rhs) / doublemag;
-    }
-
-    // get the dot product of two vector3s divided by both their magnitudes
-    export function Dot3Norm(lhs: Vector3, rhs: Vector3): number {
-        let doublemag = lhs.Magnitude() * rhs.Magnitude();
-        return (Dot3(lhs, rhs) / doublemag);
-    }
-
-    // get the dot product of two vector2s divided by both their magnitudes
-    export function Dot2Norm(lhs: Vector2, rhs: Vector2): number {
-        let doublemag = lhs.Magnitude() * rhs.Magnitude();
-        return (Dot2(lhs, rhs) / doublemag);
-    }
-
-    // get the cross product of two vector3s 
-    export function Cross3(lhs: Vector3, rhs: Vector3): Vector3 {
+    /**
+     * Calculate the cross product of two Vector3s.
+     * @param lhs Left hand side vector.
+     * @param rhs Right hand side vector.
+     * @returns lhs cross rhs.
+     */
+    export function cross3(lhs: Vector3, rhs: Vector3): Vector3 {
         let nx = lhs.y * rhs.z - lhs.z * rhs.y;
         let ny = lhs.z * rhs.x - lhs.x * rhs.z;
         let nz = lhs.x * rhs.y - lhs.y * rhs.x;
         return new Vector3(nx, ny, nz);
     }
 
-    // generic angle between function taking vector2s or vector3s. #FIXME is this rads or degrees?
-    export function AngleBetween(lhs: Vector2 | Vector3, rhs: Vector2 | Vector3): number {
-        return Math.acos(DotNorm(lhs, rhs));
+    /**
+     * Generic angle between function taking Vector2s or Vector3s.
+     * @param lhs Left hand side vector.
+     * @param rhs Right hand side vector.
+     * @returns The angle between lhs and rhs in radians.
+     */
+    export function angleBetween(lhs: Vector, rhs: Vector): number {
+        return Math.acos(dotNorm(lhs, rhs));
     }
 
-    // returns the angle between two vector3s
-    export function AngleBetween3(lhs: Vector3, rhs: Vector3): number {
-        return Math.acos(Dot3Norm(lhs, rhs));
-    }
-
-    // returns the angle between two vector2s
-    export function AngleBetween2(lhs: Vector2, rhs: Vector2): number {
-        return Math.acos(Dot2Norm(lhs, rhs));
-    }
-
-    export class Vector3 {
+    /** Generic vector interface so both V2 and V3 can be used interchangably. */
+    export abstract class Vector {
         x: number;
         y: number;
         z: number;
+        
+        public abstract toString(): string;
+        public abstract toArray(): number[];
+        public abstract clone(): Vector;
+        public abstract copy(other: Vector): void;
+
+        /** Returns the distance to another vector. */
+        public distanceTo(other: Vector): number {
+            return distance(this, other);
+        }
+        
+        /** Gets the magnitude/length of this vector squared. faster than Magnitude() ** 2. */
+        public sqrMagnitude(): number {
+            return (this.x ** 2) + (this.y ** 2) + (this.z ** 2);
+        }
+
+        /** Gets the magnitude/length of this vector. */
+        public magnitude(): number {
+            return Math.sqrt(this.sqrMagnitude());
+        }
+
+        /** Dot product this vector with another. */
+        public dotWith(other: Vector): number {
+            return dot(this, other);
+        }
+
+        /** Dot product another vector with this. */
+        public withDot(other: Vector): number {
+            return dot(other, this);
+        }
+
+        public abstract normalised(): Vector;
+        public abstract normalise(): void;
+
+        public abstract plus(other: Vector): Vector;
+        public abstract plusEquals(other: Vector): void;
+        public abstract minus(other: Vector): Vector;
+        public abstract minusEquals(other: Vector): void;
+        public abstract times(other: number): Vector;
+        public abstract timesEquals(other: number): void;
+        public abstract dividedBy(other: number): Vector;
+        public abstract divideBy(other: number): void;
+        public abstract scaled(other: Vector): Vector;
+        public abstract scale(other: Vector): void;
+
+    }
+
+    /** 3 dimensional vector, with x y and z. */
+    export class Vector3 extends Vector {
+        public x: number;
+        public y: number;
+        public z: number;
 
         constructor(x: number, y: number, z: number) {
+            super();
             this.x = x;
             this.y = y;
             this.z = z;
         }
 
-        static One = new Vector3(1, 1, 1);
-        static Zero = new Vector3(0, 0, 0);
+        // #FIXME check style guide for class constants
+        /** The vector (1, 1, 1). */
+        static readonly One = new Vector3(1, 1, 1);
+        /** The vector (0, 0, 0). */
+        static readonly Zero = new Vector3(0, 0, 0);
 
-        // convert to string
-        ToString() {
+        /** Convert to string. */
+        public override toString(): string {
             return "(" + this.x + ", " + this.y + ", " + this.z + ")"
         }
 
-        // conver this to an array
-        ToArray() {
+        /** Convert to array of [x, y, z]. */
+        public override toArray(): number[] {
             return [this.x, this.y, this.z];
         }
 
-        // distance to another vector
-        DistanceTo(other: Vector3) {
-            return Distance3(this, other);
+        /** Convert a 3 element array to a Vector3 */
+        public static fromArray(values: number[]): Vector3 {
+            if (values.length < 3)
+                throw "Cannot create a Vector3 from an array with less than 3 elements."
+            return new Vector3(values[0], values[1], values[2]);
         }
 
-        // gets the magnitude/length of this vector squared. faster than Magnitude() ** 2
-        SqrMagnitude() {
-            return (this.x ** 2) + (this.y ** 2) + (this.z ** 2);
+        /** Return a copy of this Vector3. */
+        public override clone(): Vector3 {
+            return new Vector3(this.x, this.y, this.z);
         }
 
-        // gets the magnitude/length of this vector
-        Magnitude() {
-            return Math.sqrt(this.SqrMagnitude());
+        /** Copy the values of another Vector3 to this. Overrides this Vector3s values. */
+        public override copy(other: Vector3): void {
+            this.x = other.x;
+            this.y = other.y;
+            this.z = other.z;
         }
 
-        // normalise this vector (magnitude/length of 1)
-        Normalise() {
-            let mag = this.Magnitude();
-            this.x /= mag;
-            this.y /= mag;
-            this.z /= mag;
-        }
-
-        // return a normalised copy of this vector (magnitude/length of 1)
-        Normalised() {
-            let mag = this.Magnitude();
+        /** Return a normalised copy of this vector (magnitude/length of 1) */
+        public override normalised(): Vector3 {
+            let mag = this.magnitude();
             return new Vector3(this.x / mag, this.y / mag, this.z / mag);
         }
 
-        // return a copy of this vector scaled by a number
-        Times(scale: number) {
-            return Multiply3(this, scale);
+        /** Normalise this vector. (magnitude/length of 1) */
+        public override normalise(): void {
+            this.copy(this.normalised());
         }
 
-        // scale this vector by a number
-        TimesEquals(scale: number) {
-            this.x *= scale;
-            this.y *= scale;
-            this.z *= scale;
+        /** Return a copy of this vector with another vector added. */
+        public override plus(other: Vector): Vector3 {
+            return new Vector3(this.x + other.x, this.y + other.y, this.z + other.z);
         }
 
-        // return a copy of this vector scaled differently on x y and z
-        Scale(scale: Vector3) {
-            return new Vector3(this.x * scale.x, this.y * scale.y, this.z * scale.z);
+        /** Add another vector to this one. */
+        public override plusEquals(other: Vector): void {
+            this.copy(this.plus(other));
         }
 
-        // scale this vector differently on x y and z
-        ScaleEquals(scale: Vector3) {
-            this.x *= scale.x;
-            this.y *= scale.y;
-            this.z *= scale.z;
+        /** Return a copy of this vector with another vector subtracted. */
+        public override minus(other: Vector): Vector3 {
+            return new Vector3(this.x - other.x, this.y - other.y, this.z - other.z);
         }
 
-        // return a copy of this vector with another vector added on
-        Plus(pos: Vector3) {
-            return new Vector3(this.x + pos.x, this.y + pos.y, this.z + pos.z);
+        /** Subtract another Vector from this one */
+        public override minusEquals(other: Vector): void {
+            this.copy(this.minus(other));
         }
 
-        // add a vector to this vector
-        PlusEquals(pos: Vector3) {
-            this.x += pos.x;
-            this.y += pos.y;
-            this.z += pos.z;
+        /** Return a copy of this Vector scaled by a number. */
+        public override times(scale: number): Vector3 {
+            return new Vector3(this.x * scale, this.y * scale, this.z * scale);
         }
 
-        // return a copy of this vector with another vector added on
-        Minus(pos: Vector3) {
-            return new Vector3(this.x - pos.x, this.y - pos.y, this.z - pos.z);
+        /** Scale this vector by a number. */
+        public override timesEquals(scale: number): void {
+            this.copy(this.times(scale));
         }
 
-        // add a vector to this vector
-        MinusEquals(pos: Vector3) {
-            this.x -= pos.x;
-            this.y -= pos.y;
-            this.z -= pos.z;
+        /** Return a copy of this Vector divided by a number. */
+        public override dividedBy(scale: number): Vector3 {
+            return new Vector3(this.x / scale, this.y / scale, this.z / scale);
         }
 
-        // dot product this vector with another
-        DotWith(other: Vector3) {
-            return Dot3(this, other);
+        /** Dibide this vector by a number. */
+        public override divideBy(scale: number): void {
+            this.copy(this.dividedBy(scale));
         }
 
-        // dot product another vector with this
-        WithDot(other: Vector3) {
-            return Dot3(other, this);
+        /** Return a copy of this vector scaled differently on x y and z. */
+        public override scaled(scale: Vector): Vector3 {
+            let x = this.x * scale.x;
+            let y = this.y * scale.y;
+            let z = this.z * scale.z;
+            if (scale instanceof Vector2)
+                z = this.z;
+            return new Vector3(x, y, z);
         }
 
-        // return a 4D matrix of this vector
-        FormatToV4Matrix() {
+        /** Scale this vector differently on x y and z. */
+        public override scale(scale: Vector): void {
+            this.copy(this.scaled(scale));
+        }
+
+        // unique to vector3? probably.
+
+        /** Return a 4d matrix made from this vector. Format: [x, y, z, 1] */
+        public formatToV4Matrix(): Matrix {
             return new Matrix([[this.x], [this.y], [this.z], [1]]);
+        }
+
+        /** Return a copy of this vector rotated by a quaternion. */
+        public rotatedBy(rotation: Quaternion): Vector3 {
+            return VQME.rotateVector3(rotation, this);
+        }
+
+        /** Rotate this vector by a quaternion. */
+        public rotateBy(rotation: Quaternion): void {
+            this.copy(this.rotatedBy(rotation));
         }
     }
 
-    export class Vector2 {
-        x: number;
-        y: number;
-        z: number;
+    // #FIXME Vector3 uses this.copy(this.otherMethod()) a lot, while Vector2 doesn't. Which is better?
+    export class Vector2 extends Vector {
+        public x: number;
+        public y: number;
+        public readonly z: number = 0;
 
         constructor(x: number, y: number) {
+            super();
             this.x = x;
             this.y = y;
         }
 
-        static One = new Vector2(1, 1);
-        static Zero = new Vector2(0, 0);
+        // #FIXME check style guide for class constants
+        static readonly One = new Vector2(1, 1);
+        static readonly Zero = new Vector2(0, 0);
 
-        // convert to string
-        ToString() {
+        /** Convert to string. */
+        public override toString(): string {
             return "(" + this.x + ", " + this.y + ")";
         }
 
-        // conver this to an array
-        ToArray() {
+        /** Convert to array of [x, y]. */
+        public override toArray(): number[] {
             return [this.x, this.y];
         }
 
-        // distance to another vector
-        DistanceTo(other: Vector2) {
-            return Distance2(this, other);
+        /** Convert a 3 element array to a Vector3 */
+        public static fromArray(values: number[]): Vector2 {
+            if (values.length < 2)
+                throw "Cannot create a Vector2 from an array with less than 3 elements."
+            return new Vector2(values[0], values[1]);
         }
 
-        //gets the magnitude/length of this vector squared. faster than Magnitude() ** 2
-        SqrMagnitude() {
-            return (this.x ** 2) + (this.y ** 2);
+        /** Return a copy of this Vector2. */
+        public override clone(): Vector2 {
+            return new Vector2(this.x, this.y);
         }
 
-        // gets the magnitude/length of this vector
-        Magnitude() {
-            return Math.sqrt(this.SqrMagnitude());
+        /** Copy the values of another Vector2 to this. Overrides this Vector2s values. */
+        public override copy(other: Vector2): void {
+            this.x = other.x;
+            this.y = other.y;
         }
 
-        // normalise this vector (magnitude/length of 1)
-        Normalise() {
-            let mag = this.Magnitude();
+        /** Return a normalised copy of this Vector (magnitude/length of 1) */
+        public override normalised(): Vector2 {
+            let mag = this.magnitude();
+            return new Vector2(this.x / mag, this.y / mag);
+        }
+
+        /** Normalise this Vector. (magnitude/length of 1) */
+        public override normalise(): void {
+            let mag = this.magnitude();
             this.x /= mag;
             this.y /= mag;
         }
 
-        // return a normalised copy of this vector (magnitude/length of 1)
-        Normalised() {
-            let mag = this.Magnitude();
-            return new Vector2(this.x / mag, this.y / mag);
+        /** Return a copy of this Vector with another Vector added. */
+        public override plus(other: Vector2): Vector2
+        public override plus(other: Vector3): Vector3;
+        public override plus(other: Vector): Vector {
+            let x = this.x - other.x;
+            let y = this.y - other.y;
+            let z = this.z - other.z;
+            if (other instanceof Vector3)
+                return new Vector3(x, y, z);
+            return new Vector2(x, y);
         }
 
-
-        // return a copy of this vector scaled by a number
-        Times(scale: number) {
-            return Multiply2(this, scale);
-        }
-
-        // scale this vector by a number
-        TimesEquals(scale: number) {
-            this.x *= scale;
-            this.y *= scale;
-            this.z *= scale;
-        }
-
-        // return a copy of this vector scaled differently on x y and z
-        Scale(scale: Vector2) {
-            return new Vector2(this.x * scale.x, this.y * scale.y);
-        }
-
-        // scale this vector differently on x y and z
-        ScaleEquals(scale: Vector2) {
-            this.x *= scale.x;
-            this.y *= scale.y;
-            this.z *= scale.z;
-        }
-
-        // return a copy of this vector with another vector added on
-        Plus(pos: Vector2) {
-            return new Vector2(this.x + pos.x, this.y + pos.y);
-        }
-
-        // add a vector to this vector
-        PlusEquals(pos: Vector2) {
+        /** Add another Vector2 from this vector. */
+        public override plusEquals(pos: Vector2): void {
             this.x += pos.x;
             this.y += pos.y;
-            this.z += pos.z;
         }
 
-        // return a copy of this vector with another vector added on
-        Minus(pos: Vector2) {
-            return new Vector2(this.x - pos.x, this.y - pos.y);
+        /** 
+         * Return a copy of this Vector with another subtracted. 
+         * Returns a Vector2 or Vector3 depending on what was subtracted. 
+        */
+        public override minus(other: Vector2): Vector2;
+        public override minus(other: Vector3): Vector3;
+        public override minus(other: Vector): Vector {
+            let x = this.x - other.x;
+            let y = this.y - other.y;
+            let z = this.z - other.z;
+            if(other instanceof Vector3)
+                return new Vector3(x, y, z);
+            return new Vector2(x, y);
         }
 
-        // add a vector to this vector
-        MinusEquals(pos: Vector2) {
-            this.x -= pos.x;
-            this.y -= pos.y;
-            this.z -= pos.z;
+        /** Subtract another Vector2 from this vector. */
+        public override minusEquals(other: Vector3): void {
+            this.x -= other.x;
+            this.y -= other.y;
+        }
+
+        /** Return a copy of this vector scaled by a number. */
+        public override times(scale: number): Vector2 {
+            return multiply(this, scale);
+        }
+
+        /** Scale this vector by a number. */
+        public override timesEquals(scale: number): void {
+            this.x *= scale;
+            this.y *= scale;
+        }
+
+        /** Return a copy of this vector divided by a number. */
+        public override dividedBy(scale: number): Vector2 {
+            return divide(this, scale);
+        }
+
+        /** Divide this vector by a number. */
+        public override divideBy(scale: number): void {
+            this.x /= scale;
+            this.y /= scale;
+        }
+
+        /** Return a copy of this vector scaled differently on x y and z. */
+        public override scaled(scale: Vector): Vector2 {
+            let x = this.x * scale.x;
+            let y = this.y * scale.y;
+            return new Vector2(x, y);
+        }
+
+        /** Scale this vector differently on x y and z. */
+        public override scale(scale: Vector): void {
+            this.x *= scale.x;
+            this.y *= scale.y;
         }
         
-        ToVector3(): Vector3;
-        ToVector3(param: number): Vector3;
-        ToVector3(param?: number): Vector3 {
-        let z = 0;
-            if (param !== undefined) {
-                z = param;
+        // unique to vector2.
+
+        public toVector3(): Vector3;
+        public toVector3(z: number): Vector3;
+        /** Convert this Vector2 to a Vector3. */
+        public toVector3(z?: number): Vector3 {
+            if (z !== undefined) {
+                return new Vector3(this.x, this.y, z);
             } 
-            return new Vector3(this.x, this.y, z);
+            return new Vector3(this.x, this.y, 0);
         }
     }
 
     export class Quaternion {
-        w: number;
-        x: number;
-        y: number;
-        z: number;
+        public w: number;
+        public x: number;
+        public y: number;
+        public z: number;
 
         constructor(w: number, x: number, y: number, z: number) {
             this.w = w;
@@ -500,22 +572,97 @@ namespace VQME {
             this.z = z;
         }
 
-        static Identity = new Quaternion(1, 0, 0, 0);
+        // #FIXME check style guide for class constants
+        /** A Quaternion representing no rotation. */
+        static readonly Identity = new Quaternion(1, 0, 0, 0);
 
-        // rotate other quaternion by this
-        RotateFirst(other: Quaternion) {
-            return RotateQuaternion(other, this);
+        /** Create a 3 element array from this Quaternion in 3-2-1 format */
+        public toEulerAngles(): number[] {
+            let q = this;
+            // roll (x-axis rotation)
+            let sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
+            let cosr_cosp = 1 - 2 * (q.x * q.x + q.y * q.y);
+            let nx = Math.atan2(sinr_cosp, cosr_cosp);
+
+            // pitch (y-axis rotation)
+            let sinp = Math.sqrt(1 + 2 * (q.w * q.y - q.x * q.z));
+            let cosp = Math.sqrt(1 - 2 * (q.w * q.y - q.x * q.z));
+            let ny = 2 * Math.atan2(sinp, cosp) - Math.PI / 2;
+
+            // yaw (z-axis rotation)
+            let siny_cosp = 2 * (q.w * q.z + q.x * q.y);
+            let cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
+            let nz = Math.atan2(siny_cosp, cosy_cosp);
+
+            return [nx, ny, nz];
         }
 
-        // rotate this by other quaternion
-        RotateSecond(other: Quaternion) {
-            return RotateQuaternion(this, other);
+        /** Create a Vector3 from this Quaternion in 3-2-1 format */
+        public toEulerAnglesVector3(): Vector3 {
+            let values: number[] = this.toEulerAngles();
+            return Vector3.fromArray(values);
         }
 
-        FromEulerAngles(x: number, y: number, z: number): Quaternion;
-        FromEulerAngles(angles: Vector3): Quaternion;
-        FromEulerAngles(angles: [number, number, number]): Quaternion;
-        FromEulerAngles(param1: number | Vector3 | [number, number, number], param2?: number, param3?: number): Quaternion {
+        /** Convert this quaternion to an array of [w, x, y, z]. */
+        public toArray(): number[] {
+            return [this.w, this.x, this.y, this.z];
+        }
+
+        // untested
+        // no memory of how this works. #FIXME seems to work fine? check if y inversion matters
+        /** Convert this quaternion to a 3x3 rotation matrix. Not entirely tested. */
+        public toRotationMatrix(): Matrix {
+            let q = this.toArray(); //wxyz? xyzw?
+            //let q = [qte[1], qte[2], qte[3], qte[0]];
+            return new Matrix([
+                [2 * (q[0] * q[0] + q[1] * q[1]) - 1, 2 * (q[1] * q[2] - q[0] * q[3]), 2 * (q[1] * q[3] + q[0] * q[2])],
+                [2 * (q[1] * q[2] + q[0] * q[3]), 2 * (q[0] * q[0] + q[2] * q[2]) - 1, 2 * (q[2] * q[3] - q[0] * q[1])],
+                [2 * (q[1] * q[3] - q[0] * q[2]), 2 * (q[2] * q[3] + q[0] * q[1]), 2 * (q[0] * q[0] + q[3] * q[3]) - 1],
+            ]);
+        }
+
+        // seems to work? old code. #FIXME
+        /** Convert this quaternion to a 4x4 rotation matrix. Not entirely tested. */
+        public toRotationMatrix4(): Matrix {
+            let mat33 = this.toRotationMatrix();
+            let m3 = mat33.values;
+            let mat44 = new Matrix([
+                [m3[0][0], m3[0][1], m3[0][2], 0],
+                [m3[1][0], m3[1][1], m3[1][2], 0],
+                [m3[2][0], m3[2][1], m3[2][2], 0],
+                [0, 0, 0, 1]
+            ])
+            return mat44;
+        }
+
+        public toString(): string {
+            return "[" + this.w + ", " + this.x + ", " + this.y + ", " + this.z + "]";
+        }
+
+        public clone(): Quaternion {
+            return new Quaternion(this.w, this.x, this.y, this.z);
+        }
+
+        // rotate other quaternion by this #FIXME better name?
+        /** Return a new quaternion representing other rotated by this. */
+        public rotateOther(other: Quaternion): Quaternion {
+            return rotateQuaternion(other, this);
+        }
+
+        // rotate this by other quaternion #FIXME better name?
+        /** Return a new quaternion representing this rotated by other. */
+        public rotateThis(other: Quaternion): Quaternion {
+            return rotateQuaternion(this, other);
+        }
+
+        public fromEulerAngles(x: number, y: number, z: number): Quaternion;
+        public fromEulerAngles(angles: [number, number, number]): Quaternion;
+        public fromEulerAngles(angles: Vector3): Quaternion;
+        /** 
+         * Construct a quaternion from rotation on each axis (3-2-1 format).
+         * Takes either one number per axis, a three element array, or a Vector3.
+         */
+        public fromEulerAngles(param1: number | Vector3 | [number, number, number], param2?: number, param3?: number): Quaternion {
             if (typeof param1 === 'number') {
                 // parsing params
                 let x = param1;
@@ -537,29 +684,45 @@ namespace VQME {
   
                 return new Quaternion(nw, nx, ny, nz);
             } else if (param1 instanceof Vector3) {
-                return this.FromEulerAngles(param1.x, param1.y, param1.z);
+                return this.fromEulerAngles(param1.x, param1.y, param1.z);
             } else {
-                return this.FromEulerAngles(param1[0], param1[1], param1[2]);
+                return this.fromEulerAngles(param1[0], param1[1], param1[2]);
             }
         }
     
-        Magnitude() {
+        // #FIXME necessary?
+        /** 
+         * Return the magnitude of this quaternion squared.  
+         * w**2 + x**2 + y**2 + z**2. 
+         */
+        public sqrMagnitude(): number {
             return Math.sqrt(this.w * this.w + this.x * this.x + this.y * this.y + this.z * this.z);
         }
 
-        // normalise this quaternion
-        Normalise() {
-            let mag = this.Magnitude();
+        /** 
+         * Return the magnitude of this quaternion. 
+         * The square root of w**2 + x**2 + y**2 + z**2. 
+         */
+        public magnitude(): number {
+            return Math.sqrt(this.w * this.w + this.x * this.x + this.y * this.y + this.z * this.z);
+        }
+
+
+        // #FIXME shouldnt this make sure w is positive?
+        /** Normalise this quaternion. */
+        public normalise(): void {
+            let mag = this.magnitude();
             this.w /= mag;
             this.x /= mag;
             this.y /= mag;
             this.z /= mag;
         }
 
-        // return a copy of this quaternion normalised
-        Normalised() {
+        // #FIXME add normalization to quaternion operations like rotation
+        /** Return a copy of this quaternion normalised. */
+        public normalised(): Quaternion {
             let q = new Quaternion(this.w, this.x, this.y, this.z);
-            let mag = q.Magnitude();
+            let mag = q.magnitude();
             q.w /= mag;
             q.x /= mag;
             q.y /= mag;
@@ -567,101 +730,68 @@ namespace VQME {
             return q;
         }
 
-        // return a copy of this quaternion conjugated
-        Conjugated() {
+        // #FIXME add to a few places in code that should use this.
+        // #TODO add conjugate function? useful?
+        /** Return a copy of this quaternion conjugated. */
+        public conjugated(): Quaternion {
             return new Quaternion(this.w, -this.x, -this.y, -this.z);
-        }
-
-        // #FIXME static necessary?
-        // create a vector 3 from a quaternion in 3-2-1 format
-        static ToEulerAngles(q: Quaternion) {
-            // roll (x-axis rotation)
-            let sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
-            let cosr_cosp = 1 - 2 * (q.x * q.x + q.y * q.y);
-            let nx = Math.atan2(sinr_cosp, cosr_cosp);
-
-            // pitch (y-axis rotation)
-            let sinp = Math.sqrt(1 + 2 * (q.w * q.y - q.x * q.z));
-            let cosp = Math.sqrt(1 - 2 * (q.w * q.y - q.x * q.z));
-            let ny = 2 * Math.atan2(sinp, cosp) - Math.PI / 2;
-
-            // yaw (z-axis rotation)
-            let siny_cosp = 2 * (q.w * q.z + q.x * q.y);
-            let cosy_cosp = 1 - 2 * (q.y * q.y + q.z * q.z);
-            let nz = Math.atan2(siny_cosp, cosy_cosp);
-
-            return [nx, ny, nz];
-        }
-
-        // return an array of three numbers
-        ToEulerAngles() {
-            return Quaternion.ToEulerAngles(this);
-        }
-
-        // convert to array
-        ToArray() {
-            return [this.w, this.x, this.y, this.z];
-        }
-
-        // untested
-        // no memory of how this works. #FIXME
-        ToRotationMatrix() {
-            let q = this.ToArray(); //wxyz? xyzw?
-            //let q = [qte[1], qte[2], qte[3], qte[0]];
-            return new Matrix([
-                [2 * (q[0] * q[0] + q[1] * q[1]) - 1, 2 * (q[1] * q[2] - q[0] * q[3]), 2 * (q[1] * q[3] + q[0] * q[2])],
-                [2 * (q[1] * q[2] + q[0] * q[3]), 2 * (q[0] * q[0] + q[2] * q[2]) - 1, 2 * (q[2] * q[3] - q[0] * q[1])],
-                [2 * (q[1] * q[3] - q[0] * q[2]), 2 * (q[2] * q[3] + q[0] * q[1]), 2 * (q[0] * q[0] + q[3] * q[3]) - 1],
-            ]);
-        }
-
-        // seems to work? old code. #FIXME
-        ToRotationMatrix4() {
-            let mat33 = this.ToRotationMatrix();
-            let m3 = mat33.values;
-            let mat44 = new Matrix([
-                [m3[0][0], m3[0][1], m3[0][2], 0],
-                [m3[1][0], m3[1][1], m3[1][2], 0],
-                [m3[2][0], m3[2][1], m3[2][2], 0],
-                [0, 0, 0, 1]
-            ])
-            return mat44;
-        }
-
-        ToString() {
-            return "[" + this.w + ", " + this.x + ", " + this.y + ", " + this.z + "]";
         }
     }
 
     export class Matrix {
-        values: number[][];
+        public values: number[][];
 
         constructor(values: number[][]) {
             this.values = values;
         }
 
-        static multiply(a: Matrix, b: Matrix) {
-            let aNumRows = a.values.length, aNumCols = a.values[0].length,
-                bNumRows = b.values.length, bNumCols = b.values[0].length
+        /** Turn this matrix into a pretty, well-formatted string */
+        public toString(): string {
+            let outStr = "";
+            for (let s = 0; s < this.values.length; ++s) {
+                outStr += this.values[s].join(' ') + "\n";
+            }
+            return outStr;
+        }
+
+        /** Return a copy of this matrix. */
+        public clone(): Matrix {
+            return new Matrix(this.values);
+        }
+        
+        // #FIXME necessary?
+        /** Override the values of this matrix with the values of another matrix. */
+        public copy(other: Matrix): void {
+            this.values = other.values;
+        }
+
+        /** Multiply two matrices together. */
+        public static multiply(lhs: Matrix, rhs: Matrix): Matrix {
+            let aNumRows = lhs.values.length, aNumCols = lhs.values[0].length,
+                bNumRows = rhs.values.length, bNumCols = rhs.values[0].length
             let m: number[][] = [];  // initialize array of rows
             for (let r = 0; r < aNumRows; ++r) {
                 m[r] = []; // initialize the current row
                 for (let c = 0; c < bNumCols; ++c) {
                     m[r][c] = 0;             // initialize the current cell
                     for (let i = 0; i < aNumCols; ++i) {
-                        m[r][c] += a.values[r][i] * b.values[i][c];
+                        m[r][c] += lhs.values[r][i] * rhs.values[i][c];
                     }
                 }
             }
             return new Matrix(m);
         }
 
-        ToString() {
-            let outStr = "";
-            for (let s = 0; s < this.values.length; ++s) {
-                outStr += this.values[s].join(' ') + "\n";
-            }
-            return outStr;
+        // #FIXME necessary?
+        /** Return a new matrix corresponding to this matrix multiplied by an other matrix. */
+        public times(other: Matrix): Matrix {
+            return Matrix.multiply(this, other);
+        }
+
+        // #FIXME necessary?
+        /** Replace this matrix with the result of multiplying this matrix with an other matrix. */
+        public timesEquals(other: Matrix): void {
+            this.copy(this.times(other));   
         }
     }
 }
