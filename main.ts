@@ -8,7 +8,7 @@
  * #TODO normalise quaternions before doing rotations? may be inefficient. 
  * #TODO finish VQME.rotateVector3Compound
  */
-namespace VQME {
+namespace MathVQ {
     /**
      * Rotate Vector3 by quaternion.
      * @param quaternion The Quaternion representing the rotation.
@@ -21,7 +21,7 @@ namespace VQME {
         //let qinv = qsame.Conjugate();
         let qinv = new Quaternion(qsame.w, -qsame.x, -qsame.y, -qsame.z);
 
-        let qoutq = VQME.rotateQuaternion(qsame, VQME.rotateQuaternion(qvec, qinv));
+        let qoutq = MathVQ.rotateQuaternion(qsame, MathVQ.rotateQuaternion(qvec, qinv));
         return new Vector3(qoutq.x, qoutq.y, qoutq.z);
     }
 
@@ -67,7 +67,7 @@ namespace VQME {
         let nqy = a.w * b.y - a.x * b.z + a.y * b.w + a.z * b.x;
         let nqz = a.w * b.z + a.x * b.y - a.y * b.x + a.z * b.w;
 
-        return new VQME.Quaternion(nqw, nqx, nqy, nqz);
+        return new Quaternion(nqw, nqx, nqy, nqz);
     }
 
 
@@ -231,6 +231,7 @@ namespace VQME {
         return Math.acos(dotNorm(lhs, rhs));
     }
 
+}
     /** Generic vector interface so both V2 and V3 can be used interchangably. */
     export abstract class Vector {
         x: number;
@@ -244,7 +245,7 @@ namespace VQME {
 
         /** Returns the distance to another vector. */
         public distanceTo(other: Vector): number {
-            return distance(this, other);
+            return MathVQ.distance(this, other);
         }
         
         /** Gets the magnitude/length of this vector squared. faster than Magnitude() ** 2. */
@@ -259,12 +260,12 @@ namespace VQME {
 
         /** Dot product this vector with another. */
         public dotWith(other: Vector): number {
-            return dot(this, other);
+            return MathVQ.dot(this, other);
         }
 
         /** Dot product another vector with this. */
         public withDot(other: Vector): number {
-            return dot(other, this);
+            return MathVQ.dot(other, this);
         }
 
         public abstract normalised(): Vector;
@@ -406,7 +407,7 @@ namespace VQME {
 
         /** Return a copy of this vector rotated by a quaternion. */
         public rotatedBy(rotation: Quaternion): Vector3 {
-            return VQME.rotateVector3(rotation, this);
+            return MathVQ.rotateVector3(rotation, this);
         }
 
         /** Rotate this vector by a quaternion. */
@@ -513,7 +514,7 @@ namespace VQME {
 
         /** Return a copy of this vector scaled by a number. */
         public override times(scale: number): Vector2 {
-            return multiply(this, scale);
+            return MathVQ.multiply(this, scale);
         }
 
         /** Scale this vector by a number. */
@@ -524,7 +525,7 @@ namespace VQME {
 
         /** Return a copy of this vector divided by a number. */
         public override dividedBy(scale: number): Vector2 {
-            return divide(this, scale);
+            return MathVQ.divide(this, scale);
         }
 
         /** Divide this vector by a number. */
@@ -646,13 +647,13 @@ namespace VQME {
         // rotate other quaternion by this #FIXME better name?
         /** Return a new quaternion representing other rotated by this. */
         public rotateOther(other: Quaternion): Quaternion {
-            return rotateQuaternion(other, this);
+            return MathVQ.rotateQuaternion(other, this);
         }
 
         // rotate this by other quaternion #FIXME better name?
         /** Return a new quaternion representing this rotated by other. */
         public rotateThis(other: Quaternion): Quaternion {
-            return rotateQuaternion(this, other);
+            return MathVQ.rotateQuaternion(this, other);
         }
 
         public fromEulerAngles(x: number, y: number, z: number): Quaternion;
@@ -794,4 +795,3 @@ namespace VQME {
             this.copy(this.times(other));   
         }
     }
-}
