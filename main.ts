@@ -4,9 +4,10 @@
  * 
  * #TODO fix 'vector' and 'quaternion' capitalization in comments
  * #TODO decide if classes should have fancy comments, or if all code should use simpler comments
- * #TODO normalise quaternions before doing rotations? may be inefficient. 
+ * #TODO normalise quaternions before doing rotations? may be inefficient. why would they ever be non-normal?
  * #TODO finish rotateVector3Compound
  * #TODO add function to turn quaternion directly into transformation matrix, without converting to matrix in between
+ * #TODO examine using rotation matrices vs applying quaternions directly.
  */
 namespace MathVQ {
     /**
@@ -18,8 +19,7 @@ namespace MathVQ {
     export function rotateVector3(quaternion: Quaternion, vector: Vector3): Vector3 {
         let qsame = new Quaternion(quaternion.w, quaternion.x, quaternion.y, quaternion.z);
         let qvec = new Quaternion(0, vector.x, vector.y, vector.z);
-        //let qinv = qsame.Conjugate();
-        let qinv = new Quaternion(qsame.w, -qsame.x, -qsame.y, -qsame.z);
+        let qinv = qsame.conjugated();
 
         let qoutq = MathVQ.rotateQuaternion(qsame, MathVQ.rotateQuaternion(qvec, qinv));
         return new Vector3(qoutq.x, qoutq.y, qoutq.z);
@@ -30,10 +30,12 @@ namespace MathVQ {
     export function rotateVector3Compound(vector: Vector3, ...quaternions: Quaternion[]) {
         let result = vector.clone();
 
+        let transformationMatrix = TransformationMatrix.Identity.clone();
         for (let i = 0; i < quaternions.length; i++) {
             let quatenrion = quaternions[i];
-            let q = quatenrion.normalised();
-            
+            let q = quatenrion.normalised(); // #FIXME necessary? quaternions should be normalised by default.
+            let m = TransformationMatrix.rotationMatrix(q);
+
         }
     }
 
@@ -299,9 +301,9 @@ export class Vector3 extends Vector {
 
     // #FIXME check style guide for class constants
     /** The vector (1, 1, 1). */
-    static readonly One = new Vector3(1, 1, 1);
+    public static readonly One: Readonly<Vector3> = new Vector3(1, 1, 1);
     /** The vector (0, 0, 0). */
-    static readonly Zero = new Vector3(0, 0, 0);
+    public static readonly Zero: Readonly<Vector3>  = new Vector3(0, 0, 0);
 
     /** Convert to string. */
     public override toString(): string {
@@ -413,9 +415,19 @@ export class Vector3 extends Vector {
 
     // unique to vector3? probably.
 
-    /** Return a 4d matrix made from this vector. Format: [x, y, z, 1] */
-    public formatToV4Matrix(): Matrix {
+    /** Return a 4x1 matrix corresponding to this vector. Format: [x, y, z, 1].  Transformation matrices can be multiplied with this. */
+    public to4x1Matrix(): Matrix {
         return new Matrix([[this.x], [this.y], [this.z], [1]]);
+    }
+
+    /** Return a transformation matrix corresponding to a translation by this vector. */
+    public toTranslationMatrix(): TransformationMatrix {
+        return TransformationMatrix.translationMatrix(this);
+    }
+
+    /** Return a transformation matrix corresponding to scaling by this vector. */
+    public toScaleMatrix(): TransformationMatrix {
+        return TransformationMatrix.scaleMatrix(this);
     }
 
     /** Return a copy of this vector rotated by a quaternion. */
@@ -441,8 +453,8 @@ export class Vector2 extends Vector {
     }
 
     // #FIXME check style guide for class constants
-    static readonly One = new Vector2(1, 1);
-    static readonly Zero = new Vector2(0, 0);
+    static readonly One: Readonly<Vector2> = new Vector2(1, 1);
+    static readonly Zero: Readonly<Vector2> = new Vector2(0, 0);
 
     /** Convert to string. */
     public override toString(): string {
@@ -595,7 +607,7 @@ export class Quaternion {
 
     // #FIXME check style guide for class constants
     /** A Quaternion representing no rotation. */
-    static readonly Identity = new Quaternion(1, 0, 0, 0);
+    public static readonly Identity: Readonly<Quaternion> = new Quaternion(1, 0, 0, 0);
 
     /** Create a 3 element array from this Quaternion in 3-2-1 format */
     public toEulerAngles(): number[] {
@@ -650,10 +662,10 @@ export class Quaternion {
      * Convert this quaternion to a 4x4 rotation matrix. Not entirely tested. 
      * This 4x4 matrix can be multiplied by a 4x1 matrix representing a Vector3 to apply this rotation to it.
      */
-    public toRotationMatrix4x4(): Matrix {
+    public toRotationMatrix4x4(): TransformationMatrix {
         let mat33 = this.toRotationMatrix3x3();
         let m3 = mat33.values;
-        let mat44 = new Matrix([
+        let mat44 = new TransformationMatrix([
             [m3[0][0], m3[0][1], m3[0][2], 0],
             [m3[1][0], m3[1][1], m3[1][2], 0],
             [m3[2][0], m3[2][1], m3[2][2], 0],
@@ -692,13 +704,18 @@ export class Quaternion {
         return MathVQ.rotateQuaternion(this, other);
     }
 
-    public static fromEulerAngles(x: number, y: number, z: number): Quaternion;
-    public static fromEulerAngles(angles: [number, number, number]): Quaternion;
-    public static fromEulerAngles(angles: Vector3): Quaternion;
     /** 
      * Construct a quaternion from rotation on each axis (3-2-1 format).
-     * Takes either one number per axis, a three element array, or a Vector3.
      */
+    public static fromEulerAngles(x: number, y: number, z: number): Quaternion;
+    /** 
+     * Construct a quaternion from rotation on each axis (3-2-1 format). Array format should be [x, y, z].
+     */
+    public static fromEulerAngles(angles: [number, number, number]): Quaternion;
+    /** 
+     * Construct a quaternion from a vector3 representing on each axis (3-2-1 format).
+     */
+    public static fromEulerAngles(angles: Vector3): Quaternion;
     public static fromEulerAngles(param1: number | Vector3 | [number, number, number], param2?: number, param3?: number): Quaternion {
         if (typeof param1 === 'number') {
             // parsing params
@@ -727,44 +744,40 @@ export class Quaternion {
         }
     }
 
-    // #FIXME necessary?
+    // #FIXME should this be public? nobody should use this.
     /** 
-     * Return the magnitude of this quaternion squared.  
-     * w**2 + x**2 + y**2 + z**2. 
+     * Return the magnitude of this quaternion's axis. 
+     * The square root of x**2 + y**2 + z**2. 
      */
-    public sqrMagnitude(): number {
-        return Math.sqrt(this.w * this.w + this.x * this.x + this.y * this.y + this.z * this.z);
+    private magnitude(): number {
+        return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
     }
 
-    /** 
-     * Return the magnitude of this quaternion. 
-     * The square root of w**2 + x**2 + y**2 + z**2. 
-     */
-    public magnitude(): number {
-        return Math.sqrt(this.w * this.w + this.x * this.x + this.y * this.y + this.z * this.z);
-    }
-
-
-    // #FIXME shouldnt this make sure w is positive?
+    // #FIXME should functions like this return a reference to themselves, or void?
+    // #FIXME when and why would this need to be normalised? this should never happen.
     /** Normalise this quaternion. */
     public normalise(): void {
         let mag = this.magnitude();
-        this.w /= mag;
         this.x /= mag;
         this.y /= mag;
         this.z /= mag;
+
+        // #FIXME necessary? Makes sense for w to be positive...
+        if (this.w < 0)
+        {
+            this.w *= -1;
+            this.x *= -1;
+            this.y *= -1;
+            this.z *= -1;
+        }
     }
 
-    // #FIXME add normalization to quaternion operations like rotation
+    // #FIXME add normalization to quaternion operations like rotation?
     /** Return a copy of this quaternion normalised. */
     public normalised(): Quaternion {
-        let q = new Quaternion(this.w, this.x, this.y, this.z);
-        let mag = q.magnitude();
-        q.w /= mag;
-        q.x /= mag;
-        q.y /= mag;
-        q.z /= mag;
-        return q;
+        let returnion: Quaternion = this.clone();
+        returnion.normalise();
+        return returnion;
     }
 
     // #FIXME add to a few places in code that should use this.
@@ -851,19 +864,19 @@ export class TransformationMatrix extends Matrix {
     public override values: internalData4x4;
 
     /** A transformation matrix representing no change. */
-    static readonly Identity = new TransformationMatrix([
+    public static readonly Identity: Readonly<TransformationMatrix> = new TransformationMatrix([
         [1, 0, 0, 0],
         [0, 1, 0, 0],
         [0, 0, 1, 0],
         [0, 0, 0, 1],
     ])
 
-        
     constructor(values: internalData4x4) {
         super(values);
         this.values = values;
     }
 
+    /** Convert a matrix into a transformationMatrix. Must be a 4x4 matrix. */
     public static fromMatrix(matrix: Matrix): TransformationMatrix {
         let values = matrix.values;
         let internalData: internalData4x4; 
@@ -878,10 +891,6 @@ export class TransformationMatrix extends Matrix {
         }
 
         return new TransformationMatrix(internalData);
-    }
-
-    protected static fromInternalData(data: internalData4x4) {
-        
     }
 
     /** Create a translation matrix from x y and z. */
