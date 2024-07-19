@@ -30,12 +30,13 @@ namespace MathVQ {
     export function rotateVector3Compound(vector: Vector3, ...quaternions: Quaternion[]) {
         let result = vector.clone();
 
-        let transformationMatrix = TransformationMatrix.Identity.clone();
+        let transformationMatrix: TransformationMatrix;
+        transformationMatrix = TransformationMatrix.Identity.clone();
         for (let i = 0; i < quaternions.length; i++) {
             let quatenrion = quaternions[i];
             let q = quatenrion.normalised(); // #FIXME necessary? quaternions should be normalised by default.
             let m = TransformationMatrix.rotationMatrix(q);
-
+            transformationMatrix = transformationMatrix.
         }
     }
 
@@ -287,6 +288,8 @@ export abstract class Vector {
 }
 
 /** 3 dimensional vector, with x y and z. */
+//% blockNamespace="textsprite"
+//% blockGap=8
 export class Vector3 extends Vector {
     public x: number;
     public y: number;
@@ -891,6 +894,16 @@ export class TransformationMatrix extends Matrix {
         }
 
         return new TransformationMatrix(internalData);
+    }
+
+    /** Return a copy of this transformation matrix */
+    public override clone(): TransformationMatrix {
+        return new TransformationMatrix(this.values);
+    }
+
+    /** Copy the values of an other transformation matrix. Overrides the data of this matrix. */
+    public override copy(other: TransformationMatrix) {
+        this.values = other.values;
     }
 
     /** Create a translation matrix from x y and z. */
