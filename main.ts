@@ -8,13 +8,15 @@
  * #TODO add function to turn quaternion directly into transformation matrix, without converting to matrix in between
  * #TODO examine using rotation matrices vs applying quaternions directly.
  */
+//% weight=70 icon="\uf1db" color=#EC7505
 namespace MathVQ {
     /**
      * Rotate Vector3 by quaternion.
      * @param quaternion The Quaternion representing the rotation.
      * @param vector The vector to be rotated
      * @returns A new Vector3 corresponding to the rotated vector. 
-     */
+    */
+    //% blockId=MathVQ_rorateVector3 block="rotate a %vector3 by a %quaternion"
     export function rotateVector3(quaternion: Quaternion, vector: Vector3): Vector3 {
         let qsame = new Quaternion(quaternion.w, quaternion.x, quaternion.y, quaternion.z);
         let qvec = new Quaternion(0, vector.x, vector.y, vector.z);
@@ -289,8 +291,6 @@ export abstract class Vector {
 }
 
 /** 3 dimensional vector, with x y and z. */
-//% blockNamespace="textsprite"
-//% blockGap=8
 export class Vector3 extends Vector {
     public x: number;
     public y: number;
