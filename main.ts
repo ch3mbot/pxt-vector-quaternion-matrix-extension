@@ -8,10 +8,7 @@
  * #TODO add function to turn quaternion directly into transformation matrix, without converting to matrix in between
  * #TODO examine using rotation matrices vs applying quaternions directly.
  */
-//% weight=70 
-//% color=#00CCFF 
-//% advanced=true
-//% groups="['Operations','Vector','Quaternion','Matrix']"
+
 namespace MathVQ {
     /**
      * Rotate Vector3 by quaternion.
@@ -19,7 +16,6 @@ namespace MathVQ {
      * @param vector The vector to be rotated
      * @returns A new Vector3 corresponding to the rotated vector. 
     */
-    //% blockId=MathVQ_rorateVector3 block="result of using %quaternion to rotate %vector"
     export function rotateVector3(quaternion: Quaternion, vector: Vector3): Vector3 {
         let qsame = new Quaternion(quaternion.w, quaternion.x, quaternion.y, quaternion.z);
         let qvec = new Quaternion(0, vector.x, vector.y, vector.z);
@@ -30,8 +26,6 @@ namespace MathVQ {
     }
 
     /** Rotate a vector3 by multiple quaternions, in the order of the array. */
-    //% blockId=MathVQ_rotateVector3Compound group="Operations" block="result of rotating %vector by %quaternion"
-    // #FIXME how do make a block for this?
     export function rotateVector3Compound(vector: Vector3, ...quaternions: Quaternion[]) {
         let transformationMatrix: TransformationMatrix;
         transformationMatrix = TransformationMatrix.Identity.clone();
@@ -51,7 +45,6 @@ namespace MathVQ {
      * @param vector The vector to be rotated.
      * @returns A new Vector2 corresponding to the rotated vector.
      */
-    //% blockID=MathVQ_rotateVector2 group="Operations" block="result of using %angle to rotate %vector"
     export function rotateVector2(angle: number, vector: Vector2): Vector2 {
         let cosTheta = Math.cos(angle);
         let sinTheta = Math.sin(angle);
@@ -67,7 +60,6 @@ namespace MathVQ {
      * @param rhs Right hand side Quaternion.
      * @returns lhs rotated by rhs.
      */
-    //% blockID=MathVQ_rotateQuaternion group="Operations" block="rotate %lhs by %rhs"
     export function rotateQuaternion(lhs: Quaternion, rhs: Quaternion): Quaternion {
         let a = lhs;
         let b = rhs;
@@ -96,7 +88,6 @@ namespace MathVQ {
      * @param rhs Right hand side vector.
      * @returns A new vector corresponding to the two vectors added together.
      */
-    //% blockID=MathVQ_add group="Operations" block="%lhs + %rhs"
     export function add(lhs: Vector, rhs: Vector): Vector {
         let x = lhs.x + rhs.x;
         let y = lhs.y + rhs.y;
@@ -124,7 +115,6 @@ namespace MathVQ {
      * @param rhs Right hand side vector.
      * @returns A new vector corresponding to lhs minus rhs.
      */
-    //% blockID=MathVQ_subtract group="Operations" block="%lhs - %rhs"
     export function subtract(lhs: Vector, rhs: Vector): Vector {
         let x = lhs.x - rhs.x;
         let y = lhs.y - rhs.y;
@@ -145,7 +135,6 @@ namespace MathVQ {
      * @param scalar The scalar to multiply the vector by.
      * @returns A new Vector corresponding to the vector multiplied by the scalar.
      */
-    //% blockID=MathVQ_multiply group="Operations" block="%lhs * %rhs"
     export function multiply(vector: Vector, scalar: number): Vector {
         let x = vector.x * scalar;
         let y = vector.y * scalar;
@@ -166,7 +155,6 @@ namespace MathVQ {
      * @param scalar The scalar to divide the vector by.
      * @returns A new Vector corresponding to the vector divided by the scalar.
      */
-    //% blockID=MathVQ_divide group="Operations" block="%lhs / %rhs"
     export function divide(vector: Vector, scalar: number): Vector {
         let x = vector.x / scalar;
         let y = vector.y / scalar;
@@ -185,7 +173,6 @@ namespace MathVQ {
      * @param rhs Right hand side vector.
      * @returns The distance between two vectors squared. 
      */
-    //% blockID=MathVQ_sqrDistance group="Operations" block="distance between %lhs and %rhs squared"
     export function sqrDistance(lhs: Vector, rhs: Vector): number {
         let dx = lhs.x - rhs.x;
         let dy = lhs.y - rhs.y;
@@ -198,7 +185,6 @@ namespace MathVQ {
      * Generic distance function taking any combination of vector2s and vector3s. 
      * Returns the distance between two vectors. Consider if sqrDistance(lhs, rhs) is usable instead, as it is faster.
     */
-    //% blockID=MathVQ_distance group="Operations" block="distance between %lhs and %rhs"
     export function distance(lhs: Vector, rhs: Vector): number {
         return Math.sqrt(sqrDistance(lhs, rhs));
     }
@@ -210,7 +196,6 @@ namespace MathVQ {
      * @param rhs Right hand side vector.
      * @returns lhs dot rhs.
      */
-    //% blockID=MathVQ_dot group="Operations" block="dot product of %lhs and %rhs"
     export function dot(lhs: Vector, rhs: Vector): number {
         return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
     }
@@ -221,7 +206,6 @@ namespace MathVQ {
      * @param rhs Right hand side vector.
      * @returns lhs dot rhs normalised.
      */
-    //% blockID=MathVQ_dotNorm group="Operations" block="dot product of %lhs and %rhs normalised"
     export function dotNorm(lhs: Vector, rhs: Vector): number {
         let doublemag = lhs.magnitude() * rhs.magnitude();
         return dot(lhs, rhs) / doublemag;
@@ -233,7 +217,6 @@ namespace MathVQ {
      * @param rhs Right hand side vector.
      * @returns lhs cross rhs.
      */
-    //% blockID=MathVQ_cross3 group="Operations" block="cross product of %lhs and %rhs"
     export function cross3(lhs: Vector3, rhs: Vector3): Vector3 {
         let nx = lhs.y * rhs.z - lhs.z * rhs.y;
         let ny = lhs.z * rhs.x - lhs.x * rhs.z;
@@ -247,12 +230,21 @@ namespace MathVQ {
      * @param rhs Right hand side vector.
      * @returns The angle between lhs and rhs in radians.
      */
-    //% blockID=MathVQ_angleBetween group="Operations" block="angle between %lhs and %rhs in radians"
     export function angleBetween(lhs: Vector, rhs: Vector): number {
         return Math.acos(dotNorm(lhs, rhs));
     }
 
+    export function createVector3(
+        x: number,
+        y: number,
+        z: number,
+    ): Vector3 {
+        return new Vector3(x, y, z);
+    }
+    
+
 }
+
 /** Generic vector interface so both V2 and V3 can be used interchangably. */
 export abstract class Vector {
     x: number;
