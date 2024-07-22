@@ -3,9 +3,8 @@
  * Defines Vector3, Vector2, Quaternion, Matrix, and several operations.
  * 
  * #TODO fix 'vector' and 'quaternion' capitalization in comments
- * #TODO decide if classes should have fancy comments, or if all code should use simpler comments
+ * #TODO decide if classes should have full comments, with @param, or if all code should use simpler comments
  * #TODO normalise quaternions before doing rotations? may be inefficient. why would they ever be non-normal?
- * #TODO finish rotateVector3Compound
  * #TODO add function to turn quaternion directly into transformation matrix, without converting to matrix in between
  * #TODO examine using rotation matrices vs applying quaternions directly.
  */
@@ -36,8 +35,10 @@ namespace MathVQ {
             let quatenrion = quaternions[i];
             let q = quatenrion.normalised(); // #FIXME necessary? quaternions should be normalised by default.
             let m = TransformationMatrix.rotationMatrix(q);
-            transformationMatrix = transformationMatrix.
+            transformationMatrix = transformationMatrix.thenApply(m);
         }
+
+        return transformationMatrix
     }
 
     /**
@@ -1084,8 +1085,25 @@ export class TransformationMatrix extends Matrix {
         return identity.thenApply(scale).thenApply(rotation).thenApply(translation);
     }
 
+    /** 
+     * Apply this transformation matrix to a Vector3.
+     * Faster than converting the Vector3 to a 1x4 matrix and doing matrix multiplication.
+     */
+    public static applyToVector3(lhs: TransformationMatrix, rhs: Vector3): Vector3 {
+        let resultArr: number[] = [0, 0, 0, 0];
+        for (let c = 0; c < 4; ++c) { 
+            resultArr[0] += lhs.values[0][c] * rhs.x;
+            resultArr[1] += lhs.values[1][c] * rhs.y;
+            resultArr[2] += lhs.values[2][c] * rhs.z;
+            //resultArr[3] += lhs.values[3][c] * 1;
+        }
+        return new Vector3(resultArr[0], resultArr[1], resultArr[2]);
+    }
+
     /** Override of Matrix.multiply that specifically returns a TransformationMatrix */
     public static override multiply(lhs: TransformationMatrix, rhs: TransformationMatrix): TransformationMatrix {
+
+
         let m: internalData4x4;  // declare internal data structure
         for (let r = 0; r < 4; ++r) {
             m[r] = [0, 0, 0, 0]; // initialize the current row
@@ -1098,6 +1116,8 @@ export class TransformationMatrix extends Matrix {
         }
         return new TransformationMatrix(m);
     }
+
+
     
     /** Return a new transformation matrix corresponding to this transformation, then an other transformation. */
     public thenApply(other: TransformationMatrix): TransformationMatrix {
