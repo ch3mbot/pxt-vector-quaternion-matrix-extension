@@ -32,7 +32,6 @@ namespace MathVQ {
     /** Rotate a vector3 by multiple quaternions, in the order of the array. */
     //% blockId=MathVQ_rotateVector3Compound group="Operations" block="result of rotating %vector by %quaternion"
     // #FIXME how do make a block for this?
-
     export function rotateVector3Compound(vector: Vector3, ...quaternions: Quaternion[]) {
         let transformationMatrix: TransformationMatrix;
         transformationMatrix = TransformationMatrix.Identity.clone();
@@ -312,7 +311,6 @@ export class Vector3 extends Vector {
     public y: number;
     public z: number;
 
-    //% blockID=MathVQ_Vector3Constructor group="Vector" block="create new Vector3 with x:%x y:%y z:%z"
     constructor(x: number, y: number, z: number) {
         super();
         this.x = x;
