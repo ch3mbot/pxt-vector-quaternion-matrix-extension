@@ -28,7 +28,7 @@ namespace MathVQ {
     /** Rotate a vector3 by multiple quaternions, in the order of the array. */
     export function rotateVector3Compound(vector: Vector3, ...quaternions: Quaternion[]) {
         let transformationMatrix: TransformationMatrix;
-        transformationMatrix = TransformationMatrix.Identity.clone();
+        transformationMatrix = TransformationMatrix.Identity();
         for (let i = 0; i < quaternions.length; i++) {
             let quatenrion = quaternions[i];
             let q = quatenrion.normalised(); // #FIXME necessary? quaternions should be normalised by default.
@@ -251,10 +251,11 @@ export abstract class Vector {
     y: number;
     z: number;
     
-    public abstract toString(): string;
-    public abstract toArray(): number[];
-    public abstract clone(): Vector;
-    public abstract copy(other: Vector): void;
+    // all four of these are abstract, but without keyword
+    public toString(): string { return ""; }
+    public toArray(): number[] { return []; }
+    public clone(): Vector { return null; }
+    public copy(other: Vector): void { }
 
     /** Returns the distance to another vector. */
     public distanceTo(other: Vector): number {
@@ -281,19 +282,19 @@ export abstract class Vector {
         return MathVQ.dot(other, this);
     }
 
-    public abstract normalised(): Vector;
-    public abstract normalise(): void;
-
-    public abstract plus(other: Vector): Vector;
-    public abstract plusEquals(other: Vector): void;
-    public abstract minus(other: Vector): Vector;
-    public abstract minusEquals(other: Vector): void;
-    public abstract times(other: number): Vector;
-    public abstract timesEquals(other: number): void;
-    public abstract divided(other: number): Vector;
-    public abstract divide(other: number): void;
-    public abstract scaled(other: Vector): Vector;
-    public abstract scale(other: Vector): void;
+    // also abstract, but without keyword
+    public normalised(): Vector{ return null; }
+    public normalise(): void { }
+    public plus(other: Vector): Vector { return null; }
+    public plusEquals(other: Vector): void { }
+    public minus(other: Vector): Vector { return null; }
+    public minusEquals(other: Vector): void { }
+    public times(other: number): Vector { return null; }
+    public timesEquals(other: number): void { }
+    public divided(other: number): Vector { return null; }
+    public divide(other: number): void { }
+    public scaled(other: Vector): Vector { return null; }
+    public scale(other: Vector): void { }
 
 }
 
@@ -310,19 +311,22 @@ export class Vector3 extends Vector {
         this.z = z;
     }
 
-    // #FIXME check style guide for class constants
-    /** The vector (1, 1, 1). */
-    public static readonly One: Readonly<Vector3> = new Vector3(1, 1, 1);
-    /** The vector (0, 0, 0). */
-    public static readonly Zero: Readonly<Vector3>  = new Vector3(0, 0, 0);
+    /** Returns the vector (1, 1, 1). */
+    public static One(): Vector3 {
+        return new Vector3(1, 1, 1);
+    }
+    /** Returns the vector (0, 0, 0). */
+    public static Zero(): Vector3 {
+        return new Vector3(0, 0, 0);
+    }
 
     /** Convert to string. */
-    public override toString(): string {
+    public toString(): string {
         return "(" + this.x + ", " + this.y + ", " + this.z + ")"
     }
 
     /** Convert to array of [x, y, z]. */
-    public override toArray(): number[] {
+    public toArray(): number[] {
         return [this.x, this.y, this.z];
     }
 
@@ -334,25 +338,25 @@ export class Vector3 extends Vector {
     }
 
     /** Return a copy of this Vector3. */
-    public override clone(): Vector3 {
+    public clone(): Vector3 {
         return new Vector3(this.x, this.y, this.z);
     }
 
     /** Copy the values of another Vector3 to this. Overrides this Vector3s values. */
-    public override copy(other: Vector3): void {
+    public copy(other: Vector3): void {
         this.x = other.x;
         this.y = other.y;
         this.z = other.z;
     }
 
     /** Return a normalised copy of this vector (magnitude/length of 1) */
-    public override normalised(): Vector3 {
+    public normalised(): Vector3 {
         let mag = this.magnitude();
         return new Vector3(this.x / mag, this.y / mag, this.z / mag);
     }
 
     /** Normalise this vector. (magnitude/length of 1) */
-    public override normalise(): void {
+    public normalise(): void {
         let mag = this.magnitude();
         this.x /= mag;
         this.y /= mag;
@@ -360,55 +364,55 @@ export class Vector3 extends Vector {
     }
 
     /** Return a copy of this vector with another vector added. */
-    public override plus(other: Vector): Vector3 {
+    public plus(other: Vector): Vector3 {
         return new Vector3(this.x + other.x, this.y + other.y, this.z + other.z);
     }
 
     /** Add another vector to this one. */
-    public override plusEquals(other: Vector): void {
+    public plusEquals(other: Vector): void {
         this.x += other.x;
         this.y += other.y;
         this.z += other.z;
     }
 
     /** Return a copy of this vector with another vector subtracted. */
-    public override minus(other: Vector): Vector3 {
+    public minus(other: Vector): Vector3 {
         return new Vector3(this.x - other.x, this.y - other.y, this.z - other.z);
     }
 
     /** Subtract another Vector from this one */
-    public override minusEquals(other: Vector): void {
+    public minusEquals(other: Vector): void {
         this.x -= other.x;
         this.y -= other.y;
         this.z -= other.z;
     }
 
     /** Return a copy of this Vector scaled by a number. */
-    public override times(scale: number): Vector3 {
+    public times(scale: number): Vector3 {
         return new Vector3(this.x * scale, this.y * scale, this.z * scale);
     }
 
     /** Scale this vector by a number. */
-    public override timesEquals(scale: number): void {
+    public timesEquals(scale: number): void {
         this.x *= scale;
         this.y *= scale;
         this.z *= scale;
     }
 
     /** Return a copy of this Vector divided by a number. */
-    public override divided(scale: number): Vector3 {
+    public divided(scale: number): Vector3 {
         return new Vector3(this.x / scale, this.y / scale, this.z / scale);
     }
 
     /** Dibide this vector by a number. */
-    public override divide(scale: number): void {
+    public divide(scale: number): void {
         this.x /= scale;
         this.y /= scale;
         this.z /= scale;
     }
 
     /** Return a copy of this vector scaled differently on x y and z. */
-    public override scaled(scale: Vector): Vector3 {
+    public scaled(scale: Vector): Vector3 {
         let x = this.x * scale.x;
         let y = this.y * scale.y;
         let z = this.z * scale.z;
@@ -418,7 +422,7 @@ export class Vector3 extends Vector {
     }
 
     /** Scale this vector differently on x y and z. */
-    public override scale(scale: Vector): void {
+    public scale(scale: Vector): void {
         this.x *= scale.x;
         this.y *= scale.y;
         this.z *= scale.z;
@@ -464,16 +468,22 @@ export class Vector2 extends Vector {
     }
 
     // #FIXME check style guide for class constants
-    static readonly One: Readonly<Vector2> = new Vector2(1, 1);
-    static readonly Zero: Readonly<Vector2> = new Vector2(0, 0);
+    /** Returns the vector (1, 1). */
+    public static One(): Vector2 {
+        return new Vector2(1, 1);
+    }
+    /** Returns the vector (0, 0). */
+    public static Zero(): Vector2 {
+        return new Vector2(0, 0);
+    }
 
     /** Convert to string. */
-    public override toString(): string {
+    public toString(): string {
         return "(" + this.x + ", " + this.y + ")";
     }
 
     /** Convert to array of [x, y]. */
-    public override toArray(): number[] {
+    public toArray(): number[] {
         return [this.x, this.y];
     }
 
@@ -485,33 +495,33 @@ export class Vector2 extends Vector {
     }
 
     /** Return a copy of this Vector2. */
-    public override clone(): Vector2 {
+    public clone(): Vector2 {
         return new Vector2(this.x, this.y);
     }
 
     /** Copy the values of another Vector2 to this. Overrides this Vector2s values. */
-    public override copy(other: Vector2): void {
+    public copy(other: Vector2): void {
         this.x = other.x;
         this.y = other.y;
     }
 
     /** Return a normalised copy of this Vector (magnitude/length of 1) */
-    public override normalised(): Vector2 {
+    public normalised(): Vector2 {
         let mag = this.magnitude();
         return new Vector2(this.x / mag, this.y / mag);
     }
 
     /** Normalise this Vector. (magnitude/length of 1) */
-    public override normalise(): void {
+    public normalise(): void {
         let mag = this.magnitude();
         this.x /= mag;
         this.y /= mag;
     }
 
     /** Return a copy of this Vector with another Vector added. */
-    public override plus(other: Vector2): Vector2
-    public override plus(other: Vector3): Vector3;
-    public override plus(other: Vector): Vector {
+    public plus(other: Vector2): Vector2
+    public plus(other: Vector3): Vector3;
+    public plus(other: Vector): Vector {
         let x = this.x - other.x;
         let y = this.y - other.y;
         let z = this.z - other.z;
@@ -521,7 +531,7 @@ export class Vector2 extends Vector {
     }
 
     /** Add another Vector2 from this vector. */
-    public override plusEquals(pos: Vector2): void {
+    public plusEquals(pos: Vector2): void {
         this.x += pos.x;
         this.y += pos.y;
     }
@@ -530,9 +540,9 @@ export class Vector2 extends Vector {
      * Return a copy of this Vector with another subtracted. 
      * Returns a Vector2 or Vector3 depending on what was subtracted. 
     */
-    public override minus(other: Vector2): Vector2;
-    public override minus(other: Vector3): Vector3;
-    public override minus(other: Vector): Vector {
+    public minus(other: Vector2): Vector2;
+    public minus(other: Vector3): Vector3;
+    public minus(other: Vector): Vector {
         let x = this.x - other.x;
         let y = this.y - other.y;
         let z = this.z - other.z;
@@ -542,40 +552,40 @@ export class Vector2 extends Vector {
     }
 
     /** Subtract another Vector2 from this vector. */
-    public override minusEquals(other: Vector3): void {
+    public minusEquals(other: Vector3): void {
         this.x -= other.x;
         this.y -= other.y;
     }
 
     /** Return a copy of this vector scaled by a number. */
-    public override times(scale: number): Vector2 {
+    public times(scale: number): Vector2 {
         return new Vector2(this.x * scale, this.y * scale);
     }
 
     /** Scale this vector by a number. */
-    public override timesEquals(scale: number): void {
+    public timesEquals(scale: number): void {
         this.x *= scale;
         this.y *= scale;
     }
 
     /** Return a copy of this vector divided by a number. */
-    public override divided(scale: number): Vector2 {
+    public divided(scale: number): Vector2 {
         return new Vector2(this.x / scale, this.y / scale);
     }
 
     /** Divide this vector by a number. */
-    public override divide(scale: number): void {
+    public divide(scale: number): void {
         this.x /= scale;
         this.y /= scale;
     }
 
     /** Return a copy of this vector scaled differently on x y and z. */
-    public override scaled(scale: Vector): Vector2 {
+    public scaled(scale: Vector): Vector2 {
         return new Vector2(this.x * scale.x, this.y * scale.y);
     }
 
     /** Scale this vector differently on x y and z. */
-    public override scale(scale: Vector): void {
+    public scale(scale: Vector): void {
         this.x *= scale.x;
         this.y *= scale.y;
     }
@@ -617,8 +627,10 @@ export class Quaternion {
     }
 
     // #FIXME check style guide for class constants
-    /** A Quaternion representing no rotation. */
-    public static readonly Identity: Readonly<Quaternion> = new Quaternion(1, 0, 0, 0);
+    /** Returns a Quaternion representing no rotation. */
+    public static Identity(): Quaternion {
+        return new Quaternion(1, 0, 0, 0);
+    }
 
     /** Create a 3 element array from this Quaternion in 3-2-1 format */
     public toEulerAngles(): number[] {
@@ -821,7 +833,7 @@ export class Matrix {
     }
     
     // #FIXME necessary?
-    /** Override the values of this matrix with the values of another matrix. */
+    /** the values of this matrix with the values of another matrix. */
     public copy(other: Matrix): void {
         this.values = other.values;
     }
@@ -872,15 +884,17 @@ export type internalData4x4 = [
 
 export class TransformationMatrix extends Matrix {
     // #FIXME should this be private? allow external changes?
-    public override values: internalData4x4;
+    public values: internalData4x4;
 
-    /** A transformation matrix representing no change. */
-    public static readonly Identity: Readonly<TransformationMatrix> = new TransformationMatrix([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ])
+    /** Returns a transformation matrix representing no change. */
+    public static Identity(): TransformationMatrix{
+        return new TransformationMatrix([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+        ]);
+    } 
 
     constructor(values: internalData4x4) {
         super(values);
@@ -905,12 +919,12 @@ export class TransformationMatrix extends Matrix {
     }
 
     /** Return a copy of this transformation matrix */
-    public override clone(): TransformationMatrix {
+    public clone(): TransformationMatrix {
         return new TransformationMatrix(this.values);
     }
 
     /** Copy the values of an other transformation matrix. Overrides the data of this matrix. */
-    public override copy(other: TransformationMatrix) {
+    public copy(other: TransformationMatrix) {
         this.values = other.values;
     }
 
@@ -1088,7 +1102,7 @@ export class TransformationMatrix extends Matrix {
         }
 
         // scale the object "locally", then rotate it "locally", then translate it "globally"
-        let identity = TransformationMatrix.Identity;
+        let identity = TransformationMatrix.Identity();
         return identity.thenApply(scale).thenApply(rotation).thenApply(translation);
     }
 
@@ -1107,8 +1121,8 @@ export class TransformationMatrix extends Matrix {
         return new Vector3(resultArr[0], resultArr[1], resultArr[2]);
     }
 
-    /** Override of Matrix.multiply that specifically returns a TransformationMatrix */
-    public static override multiply(lhs: TransformationMatrix, rhs: TransformationMatrix): TransformationMatrix {
+    /** of Matrix.multiply that specifically returns a TransformationMatrix */
+    public static multiply(lhs: TransformationMatrix, rhs: TransformationMatrix): TransformationMatrix {
 
 
         let m: internalData4x4;  // declare internal data structure
@@ -1132,6 +1146,7 @@ export class TransformationMatrix extends Matrix {
     }
 
     /** Return a new transformation matrix corresponding to this an other transformation, then this transformation. */
+    // #FIXME necessary> when would this ever be used? also confusing with thenApply.
     public applyThen(other: TransformationMatrix): TransformationMatrix {
         return TransformationMatrix.multiply(other, this);
     }
