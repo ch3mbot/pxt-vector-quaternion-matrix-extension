@@ -5,7 +5,7 @@
         "device": "*"
     },
     "files": [
-        "main.ts",
+        "VQME.ts",
         "README.md",
         "assets.json"
     ],
