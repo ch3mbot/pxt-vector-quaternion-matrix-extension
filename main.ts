@@ -246,7 +246,7 @@ namespace MathVQ {
 }
 
 /** Generic vector interface so both V2 and V3 can be used interchangably. */
-export abstract class Vector {
+abstract class Vector {
     x: number;
     y: number;
     z: number;
@@ -299,7 +299,7 @@ export abstract class Vector {
 }
 
 /** 3 dimensional vector, with x y and z. */
-export class Vector3 extends Vector {
+class Vector3 extends Vector {
     public x: number;
     public y: number;
     public z: number;
@@ -456,7 +456,7 @@ export class Vector3 extends Vector {
     }
 }
 
-export class Vector2 extends Vector {
+class Vector2 extends Vector {
     public x: number;
     public y: number;
     public readonly z: number = 0;
@@ -613,7 +613,7 @@ export class Vector2 extends Vector {
     }
 }
 
-export class Quaternion {
+class Quaternion {
     public w: number;
     public x: number;
     public y: number;
@@ -811,7 +811,7 @@ export class Quaternion {
     }
 }
 
-export class Matrix {
+class Matrix {
     public values: number[][];
 
     constructor(values: number[][]) {
@@ -868,7 +868,7 @@ export class Matrix {
     }
 }
 
-export type internalData4x4 = [
+type internalData4x4 = [
     [number, number, number, number],
     [number, number, number, number],
     [number, number, number, number],
@@ -882,7 +882,7 @@ export type internalData4x4 = [
 //     [0, 0, 0, 0],
 // ]
 
-export class TransformationMatrix extends Matrix {
+class TransformationMatrix extends Matrix {
     // #FIXME should this be private? allow external changes?
     public values: internalData4x4;
 
