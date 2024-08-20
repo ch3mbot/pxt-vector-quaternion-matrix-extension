@@ -95,7 +95,7 @@ namespace MathVQ {
 
         if (lhs instanceof Vector3 || rhs instanceof Vector3)
             return new Vector3(x, y, z);
-        
+
         return new Vector2(x, y);
     }
 
@@ -120,9 +120,9 @@ namespace MathVQ {
         let y = lhs.y - rhs.y;
         let z = lhs.z + rhs.z;
 
-        if (lhs instanceof Vector3 || rhs instanceof Vector3) 
+        if (lhs instanceof Vector3 || rhs instanceof Vector3)
             return new Vector3(x, y, z);
-        
+
         return new Vector2(x, y);
     }
 
@@ -241,16 +241,40 @@ namespace MathVQ {
     ): Vector3 {
         return new Vector3(x, y, z);
     }
-    
+
 
 }
 
 /** Generic vector interface so both V2 and V3 can be used interchangably. */
 abstract class Vector {
-    public x: number;
-    public y: number;
-    public z: number;
+    protected _x: number;
+    protected _y: number;
+    protected _z: number;
+
+    public get x() {
+        return this._x;
+    }
+
+    public set x(nx: number) {
+        this._x = nx;
+    }
+
+    public get y() {
+        return this._y;
+    }
+
+    public set y(ny: number) {
+        this._y = ny;
+    }
     
+    public get z() {
+        return this._z;
+    }
+
+    public set z(nz: number) {
+        this._z = nz;
+    }
+
     // all four of these are abstract, but without keyword
     public toString(): string { return ""; }
     public toArray(): number[] { return []; }
@@ -261,7 +285,7 @@ abstract class Vector {
     public distanceTo(other: Vector): number {
         return MathVQ.distance(this, other);
     }
-    
+
     /** Gets the magnitude/length of this vector squared. faster than Magnitude() ** 2. */
     public sqrMagnitude(): number {
         return (this.x ** 2) + (this.y ** 2) + (this.z ** 2);
@@ -283,7 +307,7 @@ abstract class Vector {
     }
 
     // also abstract, but without keyword
-    public normalised(): Vector{ return null; }
+    public normalised(): Vector { return null; }
     public normalise(): void { }
     public plus(other: Vector): Vector { return null; }
     public plusEquals(other: Vector): void { }
@@ -300,15 +324,12 @@ abstract class Vector {
 
 /** 3 dimensional vector, with x y and z. */
 class Vector3 extends Vector {
-    public x: number;
-    public y: number;
-    public z: number;
 
     constructor(x: number, y: number, z: number) {
         super();
-        this.x = x;
-        this.y = y;
-        this.z = z;
+        this._x = x;
+        this._y = y;
+        this._z = z;
     }
 
     /** Returns the vector (1, 1, 1). */
@@ -457,9 +478,9 @@ class Vector3 extends Vector {
 }
 
 class Vector2 extends Vector {
-    public x: number;
-    public y: number;
-    public readonly z: number = 0;
+    public set z(nz: number) {
+        throw "Cannot modify the z of a vector2.";
+    }
 
     constructor(x: number, y: number) {
         super();
@@ -546,7 +567,7 @@ class Vector2 extends Vector {
         let x = this.x - other.x;
         let y = this.y - other.y;
         let z = this.z - other.z;
-        if(other instanceof Vector3)
+        if (other instanceof Vector3)
             return new Vector3(x, y, z);
         return new Vector2(x, y);
     }
@@ -589,7 +610,7 @@ class Vector2 extends Vector {
         this.x *= scale.x;
         this.y *= scale.y;
     }
-    
+
     // unique to vector2.
 
     public toVector3(): Vector3;
@@ -598,7 +619,7 @@ class Vector2 extends Vector {
     public toVector3(z?: number): Vector3 {
         if (z !== undefined) {
             return new Vector3(this.x, this.y, z);
-        } 
+        }
         return new Vector3(this.x, this.y, 0);
     }
 
@@ -745,7 +766,7 @@ class Quaternion {
             let x = param1;
             let y = param2!;
             let z = param3!;
-            
+
             // actually do calculation
             let cz = Math.cos(z * 0.5);
             let sz = Math.sin(z * 0.5);
@@ -786,8 +807,7 @@ class Quaternion {
         this.z /= mag;
 
         // #FIXME necessary? Makes sense for w to be positive...
-        if (this.w < 0)
-        {
+        if (this.w < 0) {
             this.w *= -1;
             this.x *= -1;
             this.y *= -1;
@@ -831,7 +851,7 @@ class Matrix {
     public clone(): Matrix {
         return new Matrix(this.values);
     }
-    
+
     // #FIXME necessary?
     /** the values of this matrix with the values of another matrix. */
     public copy(other: Matrix): void {
@@ -864,7 +884,7 @@ class Matrix {
     // #FIXME necessary?
     /** Replace this matrix with the result of multiplying this matrix with an other matrix. */
     public timesEquals(other: Matrix): void {
-        this.copy(this.times(other));   
+        this.copy(this.times(other));
     }
 }
 
@@ -882,19 +902,20 @@ type internalData4x4 = [
 //     [0, 0, 0, 0],
 // ]
 
+
 class TransformationMatrix extends Matrix {
     // #FIXME should this be private? allow external changes?
     public values: internalData4x4;
 
     /** Returns a transformation matrix representing no change. */
-    public static Identity(): TransformationMatrix{
+    public static Identity(): TransformationMatrix {
         return new TransformationMatrix([
             [1, 0, 0, 0],
             [0, 1, 0, 0],
             [0, 0, 1, 0],
             [0, 0, 0, 1],
         ]);
-    } 
+    }
 
     constructor(values: internalData4x4) {
         super(values);
@@ -904,7 +925,7 @@ class TransformationMatrix extends Matrix {
     /** Convert a matrix into a transformationMatrix. Must be a 4x4 matrix. */
     public static fromMatrix(matrix: Matrix): TransformationMatrix {
         let values = matrix.values;
-        let internalData: internalData4x4; 
+        let internalData: internalData4x4;
         if (values.length != 4)
             throw "RangeError: Cannot create a 4x4 transformation matrix without 4 number arrays of length 4."
         for (let i = 0; i < 4; i++) {
@@ -1014,9 +1035,9 @@ class TransformationMatrix extends Matrix {
                 sz = param1.z;
             }
         } else if (Array.isArray(param1)) {
-            sx = (param1 as number[])[0];    
-            sy = (param1 as number[])[1];    
-            sz = (param1 as number[])[2];    
+            sx = (param1 as number[])[0];
+            sy = (param1 as number[])[1];
+            sz = (param1 as number[])[2];
         } else {
             sx = sy = sz = param1 as number;
             if (param2 !== undefined) {
@@ -1113,7 +1134,7 @@ class TransformationMatrix extends Matrix {
      */
     public applyToVector3(vector: Vector3): Vector3 {
         let resultArr: number[] = [0, 0, 0, 0];
-        for (let c = 0; c < 4; ++c) { 
+        for (let c = 0; c < 4; ++c) {
             resultArr[0] += this.values[0][c] * vector.x;
             resultArr[1] += this.values[1][c] * vector.y;
             resultArr[2] += this.values[2][c] * vector.z;
@@ -1140,7 +1161,7 @@ class TransformationMatrix extends Matrix {
     }
 
 
-    
+
     /** Return a new transformation matrix corresponding to this transformation, then an other transformation. */
     public thenApply(other: TransformationMatrix): TransformationMatrix {
         return TransformationMatrix.multiply(this, other);
