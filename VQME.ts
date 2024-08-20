@@ -247,9 +247,9 @@ namespace MathVQ {
 
 /** Generic vector interface so both V2 and V3 can be used interchangably. */
 abstract class Vector {
-    x: number;
-    y: number;
-    z: number;
+    public x: number;
+    public y: number;
+    public z: number;
     
     // all four of these are abstract, but without keyword
     public toString(): string { return ""; }
