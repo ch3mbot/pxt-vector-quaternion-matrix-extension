@@ -989,6 +989,7 @@ class TransformationMatrix extends Matrix {
         } else {
             return TransformationMatrix.fromMatrix(Quaternion.fromEulerAngles(param1[0], param1[1], param1[2]).toRotationMatrix4x4());
         }
+        return TransformationMatrix.Identity();
     }
 
     /** Generate a scale matrix with different values for each axis. */
@@ -1013,11 +1014,11 @@ class TransformationMatrix extends Matrix {
                 sz = param1.z;
             }
         } else if (Array.isArray(param1)) {
-            sx = param1[0];    
-            sy = param1[1];    
-            sz = param1[2];    
+            sx = (param1 as number[])[0];    
+            sy = (param1 as number[])[1];    
+            sz = (param1 as number[])[2];    
         } else {
-            sx = sy = sz = param1;
+            sx = sy = sz = param1 as number;
             if (param2 !== undefined) {
                 sy = param2;
                 sz = param3;
