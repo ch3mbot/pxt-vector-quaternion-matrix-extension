@@ -5,9 +5,10 @@
         "device": "*"
     },
     "files": [
-        "VQME.ts",
+        "main.blocks",
+        "main.ts",
         "README.md",
-        "assets.json"
+        "VQME.ts"
     ],
     "testFiles": [
         "test.ts"
