@@ -831,10 +831,12 @@ class Quaternion {
     }
 }
 
-class Matrix {
-    public values: number[][];
 
-    constructor(values: number[][]) {
+class Matrix<T extends number[][] = number[][]> {
+    //#FIXME should this be protected with a getter and setter? so transformation matrix can't be modified directly?
+    public values: T;
+
+    constructor(values: T) {
         this.values = values;
     }
 
@@ -855,7 +857,7 @@ class Matrix {
     // #FIXME necessary?
     /** the values of this matrix with the values of another matrix. */
     public copy(other: Matrix): void {
-        this.values = other.values;
+        this.values = other.values as T;
     }
 
     /** Multiply two matrices together. */
@@ -903,10 +905,7 @@ type internalData4x4 = [
 // ]
 
 
-class TransformationMatrix extends Matrix {
-    // #FIXME should this be private? allow external changes?
-    public values: internalData4x4;
-
+class TransformationMatrix extends Matrix<internalData4x4> {
     /** Returns a transformation matrix representing no change. */
     public static Identity(): TransformationMatrix {
         return new TransformationMatrix([
