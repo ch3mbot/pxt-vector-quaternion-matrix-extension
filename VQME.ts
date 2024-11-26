@@ -617,6 +617,29 @@ class Vector2 {
     }
 }
 
+// #FIXME comments
+class Vector4x1 {
+    public x: number;
+    public y: number;
+    public z: number;
+    public w: number;
+
+    constructor(x: number, y: number, z: number, w: number) {
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.w = w;
+    }
+
+    public static fromVector3(vector: Vector3): Vector4x1 {
+        return new Vector4x1(vector.x, vector.y, vector.z, 0);
+    }
+
+    public toVector3(): Vector3 {
+        return new Vector3(this.x, this.y, this.z);
+    }
+}
+
 class Quaternion {
     public w: number;
     public x: number;
@@ -709,7 +732,7 @@ class Quaternion {
             2 * (this.w * this.w + this.x * this.x) - 1, 2 * (this.x * this.y - this.w * this.z), 2 * (this.x * this.z + this.w * this.y), 0,
             2 * (this.x * this.y + this.w * this.z), 2 * (this.w * this.w + this.y * this.y) - 1, 2 * (this.y * this.z - this.w * this.x), 0,
             2 * (this.x * this.z - this.w * this.y), 2 * (this.y * this.z + this.w * this.x), 2 * (this.w * this.w + this.z * this.z) - 1, 0,
-            0, 0, 0, 0
+            0, 0, 0, 1
         ]);
     }
 
@@ -900,7 +923,7 @@ interface IMatrix {
 // #FIXME make abstract class? All square matrices should have a static Identity function...
 interface ISquareMatrix extends IMatrix {
     determinant(): number;
-    inverse(): number;
+    inverse(): Matrix4x4;
     trace(): number;
     isSymmetric(): boolean;
 }
@@ -1401,6 +1424,15 @@ class Matrix4x4 implements ISquareMatrix {
         );
     }
 
+    public multiplyVector4x1(vector4x1: Vector4x1): Vector4x1 {
+        return new Vector4x1(
+            this.values[0] * vector4x1.x + this.values[1] * vector4x1.y + this.values[2] * vector4x1.z + this.values[3] * vector4x1.w,
+            this.values[4] * vector4x1.x + this.values[5] * vector4x1.y + this.values[6] * vector4x1.z + this.values[7] * vector4x1.w,
+            this.values[8] * vector4x1.x + this.values[9] * vector4x1.y + this.values[10] * vector4x1.z + this.values[11] * vector4x1.w,
+            this.values[12] * vector4x1.x + this.values[13] * vector4x1.y + this.values[14] * vector4x1.z + this.values[15] * vector4x1.w
+        );
+    }
+
     /** of Matrix.multiply that specifically returns a TransformationMatrix */
     public multiply(other: Matrix4x4): Matrix4x4 {
         let outMat = new Matrix4x4(Matrix4x4.Blank4x4Array());
@@ -1433,6 +1465,25 @@ class Matrix4x4 implements ISquareMatrix {
         ]);
     }
 
+    // Nice operations for transforming specific parts
+    public translateSelf(x: number, y: number, z: number): void {
+        this.values[3] += x;
+        this.values[7] += y;
+        this.values[11] += z;
+    }
+
+    public setPosition(x: number, y: number, z: number): void {
+        this.values[3] = x;
+        this.values[7] = y;
+        this.values[11] = z;
+    }
+
+    public scaleSelf(x: number, y: number, z: number): void {
+        this.values[0] *= x;
+        this.values[5] *= x;
+        this.values[10] *= x;
+    }
+
     public transposeSelf(): void {
         this.copy(this.transpose());
     }
@@ -1440,9 +1491,12 @@ class Matrix4x4 implements ISquareMatrix {
     determinant(): number {
         throw ("Method not implemented.");
     }
-    inverse(): number {
+
+    // assumes affine
+    public inverse(): Matrix4x4 {
         throw ("Method not implemented.");
     }
+
     trace(): number {
         throw ("Method not implemented.");
     }
