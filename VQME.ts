@@ -835,7 +835,14 @@ class Quaternion {
     }
 
     // #FIXME add to a few places in code that should use this.
-    // #TODO add conjugate function? useful?
+    /** Return a copy of this quaternion conjugated. */
+    public conjugate(): void {
+        this.x *= -1;
+        this.y *= -1;
+        this.z *= -1;
+    }
+
+    // #FIXME add to a few places in code that should use this
     /** Return a copy of this quaternion conjugated. */
     public conjugated(): Quaternion {
         return new Quaternion(this.w, -this.x, -this.y, -this.z);
@@ -1366,6 +1373,16 @@ class Matrix4x4 implements ISquareMatrix {
         let translation: Matrix4x4 = this.translationMatrix(_translation.x, _translation.y, _translation.z);
         let rotation: Matrix4x4 = this.rotationMatrix(_rotation);
         let scale: Matrix4x4 = this.scaleMatrix(_scale.x, _scale.y, _scale.z);
+
+        // scale the object "locally", then rotate it "locally", then translate it "globally"
+        let identity = Matrix4x4.Identity();
+        return identity.multiply(scale).multiply(rotation).multiply(translation);
+    }
+
+    public static composeInverse(_translation: Vector3, _rotation: Quaternion, _scale: Vector3): Matrix4x4 {
+        let translation: Matrix4x4 = this.translationMatrix(-_translation.x, -_translation.y, -_translation.z);
+        let rotation: Matrix4x4 = this.rotationMatrix(_rotation.conjugated());
+        let scale: Matrix4x4 = this.scaleMatrix(1 / _scale.x, 1 / _scale.y, 1 / _scale.z);
 
         // scale the object "locally", then rotate it "locally", then translate it "globally"
         let identity = Matrix4x4.Identity();
