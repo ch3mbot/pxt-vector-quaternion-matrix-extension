@@ -1,19 +1,19 @@
 {
     "name": "Vector Quaternion Matrix Extension",
+    "version": "1.0.0",
     "description": "",
     "dependencies": {
         "device": "*"
     },
     "files": [
-        "main.ts",
         "README.md",
-        "assets.json"
+        "VQME.ts"
     ],
     "testFiles": [
         "test.ts"
     ],
     "targetVersions": {
-        "target": "1.12.47",
+        "target": "1.12.53",
         "targetId": "arcade"
     },
     "supportedTargets": [
