@@ -78,8 +78,73 @@ namespace MathVQ {
         return new Quaternion(nqw, nqx, nqy, nqz);
     }
 
+    /**
+     * Generic square distance function taking any combination of Vector2 and Vector3. 
+     * Faster than doing distance(lhs, rhs) ** 2.
+     * @param lhs Left hand side vector.
+     * @param rhs Right hand side vector.
+     * @returns The distance between two vectors squared. 
+     */
+    export function sqrDistance3(lhs: Vector3, rhs: Vector3): number {
+        let dx = lhs.x - rhs.x;
+        let dy = lhs.y - rhs.y;
+        let dz = lhs.z - rhs.z;
 
+        return (dx * dx) + (dy * dy) + (dz * dz);
+    }
 
+    /** 
+     * Generic distance function taking any combination of vector2s and vector3s. 
+     * Returns the distance between two vectors. Consider if sqrDistance(lhs, rhs) is usable instead, as it is faster.
+    */
+    export function distance3(lhs: Vector3, rhs: Vector3): number {
+        return Math.sqrt(sqrDistance3(lhs, rhs));
+    }
+
+    // #FIXME the comments for dot, dotNorm, and cross3 need improvement.
+    /**
+     * Generic dot product function taking any combination of vector2s and vector3s. 
+     * @param lhs Left hand side vector.
+     * @param rhs Right hand side vector.
+     * @returns lhs dot rhs.
+     */
+    export function dot3(lhs: Vector3, rhs: Vector3): number {
+        return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
+    }
+    
+    /**
+     * Generic normalised dot product function taking any combination of vector2s and vector3s. 
+     * @param lhs Left hand side vector.
+     * @param rhs Right hand side vector.
+     * @returns lhs dot rhs normalised.
+     */
+    export function dot3Norm(lhs: Vector3, rhs: Vector3): number {
+        let doublemag = lhs.magnitude() * rhs.magnitude();
+        return dot3(lhs, rhs) / doublemag;
+    }
+
+    /**
+     * Calculate the cross product of two Vector3s.
+     * @param lhs Left hand side vector.
+     * @param rhs Right hand side vector.
+     * @returns lhs cross rhs.
+    */
+    export function cross3(lhs: Vector3, rhs: Vector3): Vector3 {
+        let nx = lhs.y * rhs.z - lhs.z * rhs.y;
+        let ny = lhs.z * rhs.x - lhs.x * rhs.z;
+        let nz = lhs.x * rhs.y - lhs.y * rhs.x;
+        return new Vector3(nx, ny, nz);
+    }
+
+    /**
+     * Generic angle between function taking Vector2s or Vector3s.
+     * @param lhs Left hand side vector.
+     * @param rhs Right hand side vector.
+     * @returns The angle between lhs and rhs in radians.
+     */
+    export function angle3(lhs: Vector3, rhs: Vector3): number {
+        return Math.acos(dot3Norm(lhs, rhs));
+    }
 }
 
 /** 3 dimensional vector, with x y and z. */
