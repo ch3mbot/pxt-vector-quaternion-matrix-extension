@@ -1,13 +1,13 @@
 /**
- * Vector Quaternion Matrix Extension
- * Defines Vector3, Vector2, Quaternion, Matrix, and several operations.
- * 
- * #TODO fix 'vector' and 'quaternion' capitalization in comments
- * #TODO decide if classes should have full comments, with @param, or if all code should use simpler comments
- * #TODO normalise quaternions before doing rotations? may be inefficient. why would they ever be non-normal?
- * #TODO add function to turn quaternion directly into transformation matrix, without converting to matrix in between
- * #TODO examine using rotation matrices vs applying quaternions directly.
- */
+* Vector Quaternion Matrix Extension
+* Defines Vector3, Vector2, Quaternion, Matrix, and several operations.
+* 
+* #TODO fix 'vector' and 'quaternion' capitalization in comments
+* #TODO decide if classes should have full comments, with @param, or if all code should use simpler comments
+* #TODO normalise quaternions before doing rotations? may be inefficient. why would they ever be non-normal?
+* #TODO add function to turn quaternion directly into transformation matrix, without converting to matrix in between
+* #TODO examine using rotation matrices vs applying quaternions directly.
+*/
 
 namespace MathVQ {
 
@@ -33,13 +33,13 @@ namespace MathVQ {
 
     /** Rotate a vector3 by multiple quaternions, in the order of the array. */
     export function rotateVector3Compound(vector: Vector3, ...quaternions: Quaternion[]) {
-        let transformationMatrix: TransformationMatrix;
-        transformationMatrix = TransformationMatrix.Identity();
+        let transformationMatrix: Matrix4x4;
+        transformationMatrix = Matrix4x4.Identity();
         for (let i = 0; i < quaternions.length; i++) {
             let quatenrion = quaternions[i];
             let q = quatenrion.normalised(); // #FIXME necessary? quaternions should be normalised by default.
-            let m = TransformationMatrix.rotationMatrix(q);
-            transformationMatrix = transformationMatrix.thenApply(m);
+            let m = Matrix4x4.rotationMatrix(q);
+            transformationMatrix = transformationMatrix.multiply(m);
         }
 
         return transformationMatrix.applyToVector3(vector);
@@ -79,181 +79,12 @@ namespace MathVQ {
     }
 
 
-    // #FIXME are all these overloads necessary? could just do V2 + V2 => V2, V3 + VA => V3
-    export function add(lhs: Vector, rhs: Vector): Vector;                          // VA + VA => VA
-    export function add(lhs: Vector2, rhs: Vector): Vector;                         // V2 + VA => VA
-    export function add(lhs: Vector2, rhs: Vector2): Vector2;                       // V2 + V2 => V2
-    export function add(lhs: Vector2, rhs: Vector3): Vector3;                       // V2 + V3 => V3
-    export function add(lhs: Vector3, rhs: Vector): Vector3;                        // V3 + VA => V3
-    export function add(lhs: Vector3, rhs: Vector2): Vector3;                       // V3 + V2 => V3
-    export function add(lhs: Vector3, rhs: Vector3): Vector3;                       // V3 + V3 => V3
-    /**
-     * Generic add function taking Vector2s or Vector3s. 
-     * Outputs Vector2 or Vector3 accordingly.
-     * @param lhs Left hand side vector.
-     * @param rhs Right hand side vector.
-     * @returns A new vector corresponding to the two vectors added together.
-     */
-    export function add(lhs: Vector, rhs: Vector): Vector {
-        let x = lhs.x + rhs.x;
-        let y = lhs.y + rhs.y;
-        let z = lhs.z + rhs.z;
-
-        if (lhs instanceof Vector3 || rhs instanceof Vector3)
-            return new Vector3(x, y, z);
-
-        return new Vector2(x, y);
-    }
-
-    export function subtract(lhs: Vector, rhs: Vector): Vector;                         // VA + VA => VA
-    export function subtract(lhs: Vector2, rhs: Vector): Vector;                        // V2 + VA => VA
-    export function subtract(lhs: Vector2, rhs: Vector2): Vector2;                      // V2 + V2 => V2
-    export function subtract(lhs: Vector2, rhs: Vector3): Vector3;                      // V2 + V3 => V3
-    export function subtract(lhs: Vector3, rhs: Vector): Vector3;                       // V3 + VA => V3
-    export function subtract(lhs: Vector3, rhs: Vector2): Vector3;                      // V3 + V2 => V3
-    export function subtract(lhs: Vector3, rhs: Vector3): Vector3;                      // V3 + V3 => V3
-
-    // #FIXME are all these overloads necessary? could just do V2 + V2 => V2, V3 + VA => V3
-    /**
-     * Generic subtract function taking Vector2s or Vector3s. 
-     * Outputs Vector2 or Vector3 accordingly.
-     * @param lhs Left hand side vector.
-     * @param rhs Right hand side vector.
-     * @returns A new vector corresponding to lhs minus rhs.
-     */
-    export function subtract(lhs: Vector, rhs: Vector): Vector {
-        let x = lhs.x - rhs.x;
-        let y = lhs.y - rhs.y;
-        let z = lhs.z + rhs.z;
-
-        if (lhs instanceof Vector3 || rhs instanceof Vector3)
-            return new Vector3(x, y, z);
-
-        return new Vector2(x, y);
-    }
-
-    export function multiply(vector: Vector2, scalar: number): Vector2;
-    export function multiply(vector: Vector3, scalar: number): Vector3;
-    /**
-     * Generic multiply function taking vector2 or vector3 and scalar.
-     * Outputs Vector2 or Vector3 accordingly.
-     * @param vector The vector to scale.
-     * @param scalar The scalar to multiply the vector by.
-     * @returns A new Vector corresponding to the vector multiplied by the scalar.
-     */
-    export function multiply(vector: Vector, scalar: number): Vector {
-        let x = vector.x * scalar;
-        let y = vector.y * scalar;
-
-        if (vector instanceof Vector3) {
-            return new Vector3(x, y, vector.z * scalar);
-        }
-
-        return new Vector2(x, y);
-    }
-
-    export function divide(vector: Vector2, scalar: number): Vector2;
-    export function divide(vector: Vector3, scalar: number): Vector3;
-    /**
-     * Generic divide function taking vector2 or vector3 and scalar.
-     * Outputs Vector2 or Vector3 accordingly.
-     * @param vector The vector to scale.
-     * @param scalar The scalar to divide the vector by.
-     * @returns A new Vector corresponding to the vector divided by the scalar.
-     */
-    export function divide(vector: Vector, scalar: number): Vector {
-        let x = vector.x / scalar;
-        let y = vector.y / scalar;
-
-        if (vector instanceof Vector3) {
-            return new Vector3(x, y, vector.z / scalar);
-        }
-
-        return new Vector2(x, y);
-    }
-
-    /**
-     * Generic square distance function taking any combination of Vector2 and Vector3. 
-     * Faster than doing distance(lhs, rhs) ** 2.
-     * @param lhs Left hand side vector.
-     * @param rhs Right hand side vector.
-     * @returns The distance between two vectors squared. 
-     */
-    export function sqrDistance(lhs: Vector, rhs: Vector): number {
-        let dx = lhs.x - rhs.x;
-        let dy = lhs.y - rhs.y;
-        let dz = lhs.z - rhs.z;
-
-        return (dx ** 2) + (dy ** 2) + (dz ** 2);
-    }
-
-    /** 
-     * Generic distance function taking any combination of vector2s and vector3s. 
-     * Returns the distance between two vectors. Consider if sqrDistance(lhs, rhs) is usable instead, as it is faster.
-    */
-    export function distance(lhs: Vector, rhs: Vector): number {
-        return Math.sqrt(sqrDistance(lhs, rhs));
-    }
-
-    // #FIXME the comments for dot, dotNorm, and cross3 need improvement.
-    /**
-     * Generic dot product function taking any combination of vector2s and vector3s. 
-     * @param lhs Left hand side vector.
-     * @param rhs Right hand side vector.
-     * @returns lhs dot rhs.
-     */
-    export function dot(lhs: Vector, rhs: Vector): number {
-        return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
-    }
-    
-    /**
-     * Generic normalised dot product function taking any combination of vector2s and vector3s. 
-     * @param lhs Left hand side vector.
-     * @param rhs Right hand side vector.
-     * @returns lhs dot rhs normalised.
-     */
-    export function dotNorm(lhs: Vector, rhs: Vector): number {
-        let doublemag = lhs.magnitude() * rhs.magnitude();
-        return dot(lhs, rhs) / doublemag;
-    }
-
-    /**
-     * Calculate the cross product of two Vector3s.
-     * @param lhs Left hand side vector.
-     * @param rhs Right hand side vector.
-     * @returns lhs cross rhs.
-     */
-    export function cross3(lhs: Vector3, rhs: Vector3): Vector3 {
-        let nx = lhs.y * rhs.z - lhs.z * rhs.y;
-        let ny = lhs.z * rhs.x - lhs.x * rhs.z;
-        let nz = lhs.x * rhs.y - lhs.y * rhs.x;
-        return new Vector3(nx, ny, nz);
-    }
-
-    /**
-     * Generic angle between function taking Vector2s or Vector3s.
-     * @param lhs Left hand side vector.
-     * @param rhs Right hand side vector.
-     * @returns The angle between lhs and rhs in radians.
-     */
-    export function angleBetween(lhs: Vector, rhs: Vector): number {
-        return Math.acos(dotNorm(lhs, rhs));
-    }
-
-    export function createVector3(
-        x: number,
-        y: number,
-        z: number,
-    ): Vector3 {
-        return new Vector3(x, y, z);
-    }
-
 
 }
 
 /** 3 dimensional vector, with x y and z. */
 class Vector3 {
-    
+
     public x: number;
     public y: number;
     public z: number;
@@ -317,21 +148,21 @@ class Vector3 {
         return new Vector2(this.x, this.y);
     }
 
-    /** Return a 4x1 matrix corresponding to this vector. Format: [x, y, z, 1]. Transformation matrices can be multiplied with this. */
-    public to4x1Matrix(): Matrix {
-        return new Matrix([[this.x], [this.y], [this.z], [1]]);
-    }
+    // /** Return a 4x1 matrix corresponding to this vector. Format: [x, y, z, 1]. Transformation matrices can be multiplied with this. */
+    // public to4x1Matrix(): Matrix4x {
+    //     return new Matrix([[this.x], [this.y], [this.z], [1]]);
+    // }
 
     /** Return a transformation matrix corresponding to a translation by this vector. */
-    public toTranslationMatrix(): TransformationMatrix {
-        return TransformationMatrix.translationMatrix(this);
+    public toTranslationMatrix(): Matrix4x4 {
+        return Matrix4x4.translationMatrixFromVector3(this);
     }
 
     /** Return a transformation matrix corresponding to scaling by this vector. */
-    public toScaleMatrix(): TransformationMatrix {
-        return TransformationMatrix.scaleMatrix(this);
+    public toScaleMatrix(): Matrix4x4 {
+        return Matrix4x4.scaleMatrixFromVec3(this);
     }
-    
+
     // ----- Vector3 Creation Functions -----
 
     /** Convert a 3 element array to a Vector3 */
@@ -340,7 +171,7 @@ class Vector3 {
             throw "RangeError: Cannot create a Vector3 from an array with less than 3 elements.";
         return new Vector3(values[0], values[1], values[2]);
     }
-    
+
     /** Return a copy of this Vector3. */
     public clone(): Vector3 {
         return new Vector3(this.x, this.y, this.z);
@@ -355,7 +186,7 @@ class Vector3 {
     }
 
     // ----- Vector3 Complex Math Functions -----
-    
+
     /** Returns the distance to another vector squared. Faster than distanceTo() ** 2. */
     public sqrDistanceTo(other: Vector3): number {
         let dx = other.x - this.x;
@@ -398,7 +229,7 @@ class Vector3 {
             this.x * other.y - this.y * other.x
         );
     }
-    
+
     /** Calculate the angle between this vector and another. Returns in #FIXME does acos work with rads or deg by default? */
     public angleWith(other: Vector3): number {
         return Math.acos(this.dotWith(other) / Math.sqrt(this.sqrMagnitude() * other.sqrMagnitude()))
@@ -407,13 +238,13 @@ class Vector3 {
 
     // #FIXME rename to something like normalise and normaliseSelf for clarity?
     /** Return a copy of this vector normalised. */
-    public normalised(): Vector3 { 
+    public normalised(): Vector3 {
         return this.div(this.magnitude());
     }
 
     // #FIXME should these comments say something like "sets length to 1"
     /** Normalise this vector. */
-    public normalise(): void { 
+    public normalise(): void {
         this.divSelf(this.magnitude());
     }
 
@@ -461,7 +292,7 @@ class Vector3 {
     }
 
     /** Subtract another vector from this one. Changes this vectors data. */
-    public subSelf(other: Vector3): void { 
+    public subSelf(other: Vector3): void {
         this.x -= other.x;
         this.y -= other.y;
         this.z -= other.z;
@@ -474,7 +305,7 @@ class Vector3 {
     }
 
     /** Multiply this vector by a scalar. Changes this vectors data. */
-    public multSelf(scalar: number): void { 
+    public multSelf(scalar: number): void {
         this.x *= scalar;
         this.y *= scalar;
         this.z *= scalar;
@@ -486,7 +317,7 @@ class Vector3 {
     }
 
     /** Divide this vector by a scalar. Changes this vectors data. */
-    public divSelf(scalar: number): void { 
+    public divSelf(scalar: number): void {
         this.x /= scalar;
         this.y /= scalar;
         this.z /= scalar;
@@ -549,21 +380,21 @@ class Vector2 {
         return new Vector3(this.x, this.y, 0);
     }
 
-    /** Return a 4x1 matrix corresponding to this vector. Format: [x, y, 0, 1]. This may be removed, as it seems to have no utility.  */
-    public to4x1Matrix(): Matrix {
-        return new Matrix([[this.x], [this.y], [0], [1]]);
-    }
+    // /** Return a 4x1 matrix corresponding to this vector. Format: [x, y, 0, 1]. This may be removed, as it seems to have no utility.  */
+    // public to4x1Matrix(): Matrix {
+    //     return new Matrix([[this.x], [this.y], [0], [1]]);
+    // }
 
     /** Return a transformation matrix corresponding to a translation by this vector. Z translation is assumed to be 0. */
-    public toTranslationMatrix(): TransformationMatrix {
-        return TransformationMatrix.translationMatrix(this);
+    public toTranslationMatrix(): Matrix4x4 {
+        return Matrix4x4.translationMatrix(this.x, this.y, 0);
     }
 
     /** Return a transformation matrix corresponding to scaling by this vector. Z scale is assumed to be 1. */
-    public toScaleMatrix(): TransformationMatrix {
-        return TransformationMatrix.scaleMatrix(this);
+    public toScaleMatrix(): Matrix4x4 {
+        return Matrix4x4.scaleMatrix(this.x, this.y, 1);
     }
-    
+
     // ----- Vector2 Creation Functions -----
 
     /** Convert a 2 element array to a Vector2 */
@@ -572,7 +403,7 @@ class Vector2 {
             throw "RangeError: Cannot create a Vector2 from an array with less than 2 elements.";
         return new Vector2(values[0], values[1]);
     }
-    
+
     /** Return a copy of this Vector3. */
     public clone(): Vector2 {
         return new Vector2(this.x, this.y);
@@ -586,7 +417,7 @@ class Vector2 {
     }
 
     // ----- Vector2 Complex Math Functions -----
-    
+
     /** Returns the distance to another vector squared. Faster than distanceTo() ** 2. */
     public sqrDistanceTo(other: Vector2): number {
         let dx = other.x - this.x;
@@ -619,7 +450,7 @@ class Vector2 {
     public dotNorm(other: Vector2): number {
         return this.dotWith(other) / Math.sqrt(this.sqrMagnitude() + other.sqrMagnitude());
     }
-    
+
     /** Calculate the angle between this vector and another. Returns in #FIXME does acos work with rads or deg by default? */
     public angleWith(other: Vector2): number {
         return Math.acos(this.dotWith(other) / Math.sqrt(this.sqrMagnitude() * other.sqrMagnitude()))
@@ -628,13 +459,13 @@ class Vector2 {
 
     // #FIXME rename to something like normalise and normaliseSelf for clarity?
     /** Return a copy of this vector normalised. */
-    public normalised(): Vector2 { 
+    public normalised(): Vector2 {
         return this.div(this.magnitude());
     }
 
     // #FIXME should these comments say something like "sets length to 1"
     /** Normalise this vector. */
-    public normalise(): void { 
+    public normalise(): void {
         this.divSelf(this.magnitude());
     }
 
@@ -665,7 +496,7 @@ class Vector2 {
     public rotate(rads: number): void {
         let cos = Math.cos(rads);
         let sin = Math.cos(rads);
-        
+
         let nx = this.x * cos + this.y * sin;
         let ny = -this.x * sin + this.y * cos;
 
@@ -692,7 +523,7 @@ class Vector2 {
     }
 
     /** Subtract another vector from this one. Changes this vectors data. */
-    public subSelf(other: Vector2): void { 
+    public subSelf(other: Vector2): void {
         this.x -= other.x;
         this.y -= other.y;
     }
@@ -704,7 +535,7 @@ class Vector2 {
     }
 
     /** Multiply this vector by a scalar. Changes this vectors data. */
-    public multSelf(scalar: number): void { 
+    public multSelf(scalar: number): void {
         this.x *= scalar;
         this.y *= scalar;
     }
@@ -715,7 +546,7 @@ class Vector2 {
     }
 
     /** Divide this vector by a scalar. Changes this vectors data. */
-    public divSelf(scalar: number): void { 
+    public divSelf(scalar: number): void {
         this.x /= scalar;
         this.y /= scalar;
     }
@@ -743,7 +574,7 @@ class Quaternion {
     /** Create a 3 element array from this Quaternion in 3-2-1 format. Returns angles in radians. */
     public toEulerAnglesRad(): number[] {
         let q = this;
-        
+
         // roll (x-axis rotation)
         let sinr_cosp = 2 * (q.w * q.x + q.y * q.z);
         let cosr_cosp = 1 - 2 * (q.x * q.x + q.y * q.y);
@@ -765,7 +596,7 @@ class Quaternion {
     /** Create a 3 element array from this Quaternion in 3-2-1 format. Returns angles in degrees. */
     public toEulerAnglesDeg(): number[] {
         let radArr = this.toEulerAnglesRad();
-        return [radArr[0] * MathVQ.Rad2Deg, radArr[1] * MathVQ.Rad2Deg,radArr[2] * MathVQ.Rad2Deg]
+        return [radArr[0] * MathVQ.Rad2Deg, radArr[1] * MathVQ.Rad2Deg, radArr[2] * MathVQ.Rad2Deg]
     }
 
     /** Create a Vector3 from this Quaternion in 3-2-1 format in degrees. */
@@ -786,23 +617,35 @@ class Quaternion {
      * Convert this quaternion to a 3x3 rotation matrix. Not entirely tested. 
      * Multiplying this matrix by a 3x1 matrix representing a Vector3 applies this rotation to it.
      */
-    public toRotationMatrix3x3(): Matrix {
-        let q = this.toArray(); //wxyz? xyzw?
-        //let q = [qte[1], qte[2], qte[3], qte[0]];
-        return new Matrix([
-            [2 * (q[0] * q[0] + q[1] * q[1]) - 1, 2 * (q[1] * q[2] - q[0] * q[3]), 2 * (q[1] * q[3] + q[0] * q[2])],
-            [2 * (q[1] * q[2] + q[0] * q[3]), 2 * (q[0] * q[0] + q[2] * q[2]) - 1, 2 * (q[2] * q[3] - q[0] * q[1])],
-            [2 * (q[1] * q[3] - q[0] * q[2]), 2 * (q[2] * q[3] + q[0] * q[1]), 2 * (q[0] * q[0] + q[3] * q[3]) - 1],
-        ]);
-    }
+    // public toRotationMatrix3x3(): Matrix {
+    //     let q = this.toArray(); //wxyz? xyzw?
+    //     //let q = [qte[1], qte[2], qte[3], qte[0]];
+    //     // return new Matrix([
+    //     //     [2 * (q[0] * q[0] + q[1] * q[1]) - 1, 2 * (q[1] * q[2] - q[0] * q[3]), 2 * (q[1] * q[3] + q[0] * q[2])],
+    //     //     [2 * (q[1] * q[2] + q[0] * q[3]), 2 * (q[0] * q[0] + q[2] * q[2]) - 1, 2 * (q[2] * q[3] - q[0] * q[1])],
+    //     //     [2 * (q[1] * q[3] - q[0] * q[2]), 2 * (q[2] * q[3] + q[0] * q[1]), 2 * (q[0] * q[0] + q[3] * q[3]) - 1],
+    //     // ]);
+    // }
 
     // seems to work? old code. #FIXME
     /** 
      * Convert this quaternion to a 4x4 rotation matrix. Not entirely tested. 
      * This 4x4 matrix can be multiplied by a 4x1 matrix representing a Vector3 to apply this rotation to it.
      */
-    public toRotationMatrix4x4(): TransformationMatrix {
-        return TransformationMatrix.extend3x3Matrix(this.toRotationMatrix3x3());
+    public toRotationMatrix4x4(): Matrix4x4 {
+        // let q = this.toArray();
+        //     return new TransformationMatrix([
+        //         2 * (q[0] * q[0] + q[1] * q[1]) - 1, 2 * (q[1] * q[2] - q[0] * q[3]), 2 * (q[1] * q[3] + q[0] * q[2]), 0,
+        //         2 * (q[1] * q[2] + q[0] * q[3]), 2 * (q[0] * q[0] + q[2] * q[2]) - 1, 2 * (q[2] * q[3] - q[0] * q[1]), 0,
+        //         2 * (q[1] * q[3] - q[0] * q[2]), 2 * (q[2] * q[3] + q[0] * q[1]), 2 * (q[0] * q[0] + q[3] * q[3]) - 1, 0,
+        //         0, 0, 0, 0
+        //     ]);
+        return new Matrix4x4([
+            2 * (this.w * this.w + this.x * this.x) - 1, 2 * (this.x * this.y - this.w * this.z), 2 * (this.x * this.z + this.w * this.y), 0,
+            2 * (this.x * this.y + this.w * this.z), 2 * (this.w * this.w + this.y * this.y) - 1, 2 * (this.y * this.z - this.w * this.x), 0,
+            2 * (this.x * this.z - this.w * this.y), 2 * (this.y * this.z + this.w * this.x), 2 * (this.w * this.w + this.z * this.z) - 1, 0,
+            0, 0, 0, 0
+        ]);
     }
 
     /** Convert to string. */
@@ -849,7 +692,7 @@ class Quaternion {
     public static fromEulerAnglesRadVec3(angles: Vector3): Quaternion {
         return this.fromEulerAnglesRad(angles.x, angles.y, angles.z);
     }
-    
+
     /** 
      * Construct a quaternion from an array representing rotation on each axis (3-2-1 format) in degrees.
      */
@@ -934,36 +777,358 @@ class Quaternion {
     }
 }
 
+// #TODO LU decomp, QR decomp, eigenvectors/values, Hadamard Product, pseudoinverse, rank, norm, condition number
+// #FIXME should set functions return the previous value? for rows and cols
 
-/** A number[][] type for a transformation matrix. */
-type internalData4x4 = [
-    [number, number, number, number],
-    [number, number, number, number],
-    [number, number, number, number],
-    [number, number, number, number]
-];
+interface IMatrix {
+    // getters and setters
+    get(row: number, col: number): number;
+    set(row: number, col: number, val: number): void;
 
-/** A number array for a transformation matrix. */
-//#TODO refactor all matrix code to work with a 1d array...
-type internalData4x4Lin = [
-    number, number, number, number,
-    number, number, number, number,
-    number, number, number, number,
-    number, number, number, number,
-]
+    rows(): number;
+    cols(): number;
 
-// const defaultInternalData4x4: internalData4x4 = [
-//     [0, 0, 0, 0],
-//     [0, 0, 0, 0],
-//     [0, 0, 0, 0],
-//     [0, 0, 0, 0],
-// ]
+    getRow(row: number): number[];
+    getCol(col: number): number[];
+
+    setRow(row: number, vals: number[]): void;
+    setCol(col: number, vals: number[]): void;
+
+    fill(val: number): void;
+
+    // conversion
+    clone(): IMatrix;
+    equals(other: IMatrix): boolean;
+    toString(): string;
+    toArray(): number[];
+    toArray2D(): number[][];
+
+    // Basic math stuff. do all matrices need this?
+    // add(other: IMatrix): IMatrix;
+    // addSelf(other: IMatrix): void;
+    // sub(other: IMatrix): IMatrix;
+    // subSelf(other: IMatrix): void;
+    // mult(scalar: number): IMatrix;
+    // multSelf(scalar: number): void;
+    // div(scalar: number): IMatrix;
+    // divSelf(scalar: number): void;
+    // scale(other: IMatrix): IMatrix;
+    // scaleSelf(other: IMatrix): void;
+
+    // Complex math stuff
+    multiply(other: IMatrix): IMatrix;
+    multiplySelf(other: IMatrix): void;
+
+    // name transposed and transpose? #FIXME
+    transpose(): IMatrix;
+    transposeSelf(): void;
+
+}
+
+// #FIXME make abstract class? All square matrices should have a static Identity function...
+interface ISquareMatrix extends IMatrix {
+    determinant(): number;
+    inverse(): number;
+    trace(): number;
+    isSymmetric(): boolean;
+}
+
+// a slow generic matrix class.
+class Matrix implements IMatrix {
+    private values: number[][];
+    private _rows: number;
+    private _cols: number;
+
+    constructor(rows: number, cols: number, values?: number[][]) {
+        this._rows = rows;
+        this._cols = cols;
+        this.fill(0);
+        if (values) {
+            this.setValues(values);
+        }
+    }
+
+    // replace with matching sized values
+    public setValues(values: number[][]) {
+        if (values.length != this._rows) {
+            throw ("Matrix Error: incorrect row size")
+        }
+        for (let i = 0; i < this._rows; i++) {
+            if (values[i].length != this._cols) {
+                throw ("Matrix Error: incorrect column size")
+            }
+        }
+        this.values = values;
+    }
+
+    // we really providing unrestricted value access like this? #FIXME
+    public getValues(): number[][] {
+        return this.values;
+    }
+
+    // getters and setters
+    public get(row: number, col: number): number { return this.values[row][col]; }
+    public set(row: number, col: number, val: number): void { this.values[row][col] = val; }
+
+    public rows(): number { return this._rows; }
+    public cols(): number { return this._cols; }
+
+    public getRow(row: number): number[] {
+        return this.values[row];
+    }
+    public getCol(col: number): number[] {
+        let orow = [];
+        for (let i = 0; i < this._rows; i++) {
+            orow.push(this.values[i][col]);
+        }
+        return orow;
+    }
+
+    public setRow(row: number, vals: number[]): void {
+        if (vals.length != this._cols) {
+            throw ("Matrix Error: badly sized row. " + vals.length + " does not match expected row size " + this._cols);
+        }
+        this.values[row] = vals;
+    }
+
+    public setCol(col: number, vals: number[]): void {
+        if (vals.length != this._rows) {
+            throw ("Matrix Error: badly sized row. " + vals.length + " does not match expected row size " + this._rows);
+        }
+        for (let i = 0; i < this._rows; i++) {
+            this.values[i][col] = vals[col];
+        }
+    }
+
+    public fill(val: number): void {
+        this.values = [];
+        for (let i = 0; i < this._rows; i++) {
+            this.values.push([]);
+            for (let j = 0; j < this._cols; j++) {
+                this.values[i].push(val);
+            }
+        }
+    }
+
+    // conversion
+    public clone(): Matrix { return new Matrix(this._rows, this._cols, this.values); }
+
+    public equals(other: IMatrix): boolean {
+        if (this._rows != other.rows() || this._cols != other.cols()) {
+            return false;
+        }
+
+        for (let i = 0; i < this._rows; i++) {
+            for (let j = 0; j < this._cols; j++) {
+                if (this.values[i][j] != other.get(i, j)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    // #FIXME make a nice tostring
+    public toString(): string {
+        throw ("unimplemented");
+    }
+    // #FIXME test this
+    public toArray(): number[] {
+        let outArr: number[] = [];
+        for (let i = 0; i < this._rows; i++) {
+            // for (let j = 0; j < this._cols; j++) {
+            //     outArr.push(this.values[i][j]);
+            // }
+            outArr.concat(this.values[i])
+        }
+        return outArr;
+    }
 
 
-class TransformationMatrix extends Matrix<internalData4x4Lin> {
+    // #FIXME test this
+    public toArray2D(): number[][] {
+        return [].concat(this.values);
+    }
+
+    // Basic math stuff
+    public add(other: IMatrix): Matrix {
+        this.throwErrorOnDimFail(other);
+        let outMat = this.clone();
+        outMat.map2((val, r, c) => val + other.get(r, c));
+        return outMat;
+    }
+    public addSelf(other: IMatrix): void {
+        this.throwErrorOnDimFail(other);
+        this.map2((val, r, c) => val + other.get(r, c));
+    }
+    public sub(other: IMatrix): Matrix {
+        this.throwErrorOnDimFail(other);
+        let outMat = this.clone();
+        outMat.map2((val, r, c) => val - other.get(r, c))
+        return outMat;;
+    }
+    public subSelf(other: IMatrix): void {
+        this.throwErrorOnDimFail(other);
+        this.map2((val, r, c) => val - other.get(r, c));
+    }
+    public mult(scalar: number): Matrix {
+        let outMat = this.clone();
+        outMat.map2((val) => val * scalar);
+        return outMat;
+    }
+    public multSelf(scalar: number): void {
+        this.map2((val) => val * scalar);
+    }
+    public div(scalar: number): Matrix {
+        let factor = 1 / scalar;
+        return this.mult(factor);
+    }
+    public divSelf(scalar: number): void {
+        let factor = 1 / scalar;
+        this.multSelf(factor);
+    }
+    public scale(other: IMatrix): Matrix {
+        this.throwErrorOnDimFail(other);
+        let outMat = this.clone();
+        outMat.map2((val, r, c) => val * other.get(r, c));
+        return outMat;
+    }
+    public scaleSelf(other: IMatrix): void {
+        this.throwErrorOnDimFail(other);
+        this.map2((val, r, c) => val * other.get(r, c));
+    }
+
+    // Complex math stuff
+    public multiply(other: IMatrix): Matrix {
+        if (this._rows != other.cols())
+            throw ("Matrix Error: matrix multiplication requires the first matrix width to match the second matrix height")
+
+        let outMat = new Matrix(this._rows, other.cols());
+        let m = this._rows;
+        let n = this._cols;
+        let p = other.cols();
+
+        for (let i = 0; i < m; i++) {
+            for (let j = 0; j < p; j++) {
+                let sum = 0;
+                for (let k = 0; k < n; k++) {
+                    sum += this.values[i][k] * other.get(k, j);
+                }
+                outMat.values[i][j] = sum;
+            }
+        }
+
+        return outMat;
+    }
+    public multiplySelf(other: IMatrix): void {
+        this.throwErrorOnDimFail(other);
+        let nmat = this.multiply(other);
+        this.values = nmat.values;
+        this._rows = nmat._rows;
+        this._cols = nmat._cols;
+    }
+
+    // name transposed and transpose? #FIXME
+    public transpose(): Matrix {
+        let newVals = this.values[0].map((_, col) => this.values.map(row => row[col]));
+        return new Matrix(this._cols, this._rows, newVals);
+    }
+    public transposeSelf(): void {
+        this.values = this.values[0].map((_, col) => this.values.map(row => row[col]));
+        let temp = this._rows;
+        this._rows = this._cols;
+        this._cols = temp;
+    }
+
+    public verifyDimensionMatch(other: IMatrix): boolean {
+        return this._rows == other.rows() && this._cols == other.cols();
+    }
+
+    private throwErrorOnDimFail(other: IMatrix): void {
+        if (!this.verifyDimensionMatch(other))
+            throw ("Matrix Error: dimension mismatch. " + this._rows + "x" + this._cols + " matrix does not match " + other.rows() + "x" + other.cols() + " matrix.");
+    }
+
+    public map(pred: ((val: number) => number)) {
+        for (let i = 0; i < this._rows; i++) {
+            for (let j = 0; j < this._cols; j++) {
+                this.values[i][j] = pred(this.values[i][j]);
+            }
+        }
+    }
+    public map2(pred: ((val: number, row: number, col: number) => number)) {
+        for (let i = 0; i < this._rows; i++) {
+            for (let j = 0; j < this._cols; j++) {
+                this.values[i][j] = pred(this.values[i][j], i, j);
+            }
+        }
+    }
+}
+
+class Matrix4x4 implements ISquareMatrix {
+
+    private values: number[];
+
+    constructor(values: number[]) {
+        this.values = values;
+    }
+
+    public get(row: number, col: number): number { return this.values[(row << 2) + col]; }
+    public set(row: number, col: number, val: number) { this.values[(row << 2) + col] - val; }
+
+    public rows(): number { return 4; }
+    public cols(): number { return 4; }
+
+    public getRow(row: number): number[] {
+        let offset = (row << 2);
+        return [
+            this.values[0 + offset],
+            this.values[1 + offset],
+            this.values[2 + offset],
+            this.values[3 + offset]
+        ];
+    }
+    public getCol(col: number): number[] {
+        return [
+            this.values[0 + col],
+            this.values[4 + col],
+            this.values[8 + col],
+            this.values[12 + col],
+        ];
+    }
+
+    public setRow(row: number, vals: number[]): void {
+        let offset = (row << 2);
+        this.values[1 + offset] = vals[0];
+        this.values[2 + offset] = vals[1];
+        this.values[3 + offset] = vals[2];
+        this.values[4 + offset] = vals[3];
+    }
+    public setCol(col: number, vals: number[]): void {
+        this.values[0 + col] = vals[0];
+        this.values[4 + col] = vals[0];
+        this.values[8 + col] = vals[0];
+        this.values[12 + col] = vals[0];
+    }
+
+    // Why would you ever call this. #FIXME? make it just throw something
+    public fill(val: number): void {
+        this.values = [
+            val, val, val, val,
+            val, val, val, val,
+            val, val, val, val,
+            val, val, val, val
+        ];
+    }
+
     /** Returns a transformation matrix representing no change. */
-    public static Identity(): TransformationMatrix {
-        return new TransformationMatrix([
+    public static Identity(): Matrix4x4 {
+        return new Matrix4x4(Matrix4x4.IdentityArray());
+    }
+
+    public static IdentityArray(): number[] {
+        return ([
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
@@ -971,153 +1136,131 @@ class TransformationMatrix extends Matrix<internalData4x4Lin> {
         ]);
     }
 
-    constructor(values: internalData4x4Lin) {
-        super(values, 4, 4);
-        this.values = values;
-    }
-
-    //#FIXME removed all safety
-    /** Convert a matrix into a transformationMatrix. Must be a 4x4 matrix. */
-    public static fromMatrix(matrix: Matrix): TransformationMatrix {
-        // let values = matrix.values;
-        // let internalData: internalData4x4;
-        // if (values.length != 4)
-        //     throw "RangeError: Cannot create a 4x4 transformation matrix without 4 number arrays of length 4."
-        // for (let i = 0; i < 4; i++) {
-        //     if (values[i].length != 4)
-        //         throw "RangeError: Cannot create a 4x4 transformation matrix without 4 number arrays of length 4."
-        //     for (let j = 0; j < 4; j++) {
-        //         internalData[i][j] = values[i][j];
-        //     }
-        // }
-
-        return new TransformationMatrix(matrix.values);
-    }
-
-    /** Given a 3x3 matrix, adds a fourth row and col full of 0s, with a 1 in the corner. */
-    public static extend3x3Matrix(matrix: Matrix): TransformationMatrix {
-        let m33 = matrix.values;
-        return new TransformationMatrix([
-            m33[0][0], m33[0][1], m33[0][2], 0,
-            m33[1][0], m33[1][1], m33[1][2], 0,
-            m33[2][0], m33[2][1], m33[2][2], 0,
-                    0,         0,         0, 1
-        ])
-    }
-
-    /** Return a copy of this transformation matrix */
-    public clone(): TransformationMatrix {
-        return new TransformationMatrix(this.values);
-    }
-
-    /** Copy the values of an other transformation matrix. Overrides the data of this matrix. */
-    public copy(other: TransformationMatrix) {
-        this.values = other.values;
-    }
-
-    /** Create a translation matrix from x y and z. */
-    public static translationMatrix(x: number, y: number, z: number): TransformationMatrix;
-    /** Create a translation matrix from x y and z. Array format should be [x, y, z].*/
-    public static translationMatrix(data: number[]): TransformationMatrix;
-    /** Create a translation matrix from x and y. Assumes z translation of zero. */
-    public static translationMatrix(data: Vector2): TransformationMatrix;
-    /** Create a translation matrix from x y and z. */
-    public static translationMatrix(data: Vector3): TransformationMatrix;
-    public static translationMatrix(data: number[] | Vector): TransformationMatrix;
-    public static translationMatrix(param1: Vector | number[] | number, param2?: number, param3?: number): TransformationMatrix {
-        let tx: number;
-        let ty: number;
-        let tz: number;
-        if (typeof param1 == "number") {
-            tx = param1;
-            ty = param2;
-            tz = param3;
-        } else if (param1 instanceof Vector) {
-            tx = param1.x;
-            ty = param1.y;
-            tz = param1.z;
-        } else {
-            tx = param1[0];
-            ty = param1[1];
-            tz = param1[2];
-        }
-
-        return new TransformationMatrix([
-            [1, 0, 0, tx],
-            [0, 1, 0, ty],
-            [0, 0, 1, tz],
-            [0, 0, 0, 1],
+    public static Blank4x4Array(): number[] {
+        return ([
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0,
+            0, 0, 0, 0
         ]);
     }
 
-    /** Create a rotation matrix from x y and z rotation. 3-2-1 rotation order. */
-    public static rotationMatrix(x: number, y: number, z: number): TransformationMatrix;
+    // conversion
+
+    /** Return a copy of this transformation matrix */
+    public clone(): Matrix4x4 {
+        return new Matrix4x4(this.values);
+    }
+
+
+    // #FIXME test .every
+    public equals(other: Matrix4x4): boolean {
+        return this.values.every((val, index) => val == other.values[index]);
+    }
+
+    // #FIXME implement
+    public toString(): string {
+        return "unimplemented"
+    }
+
+    public toArray(): number[] {
+        return [
+            this.values[0], this.values[1], this.values[2], this.values[3],
+            this.values[4], this.values[5], this.values[6], this.values[7],
+            this.values[8], this.values[9], this.values[10], this.values[11],
+            this.values[12], this.values[13], this.values[14], this.values[15]
+        ]
+    }
+
+    public toArray2D(): number[][] {
+        return [
+            [this.values[0], this.values[1], this.values[2], this.values[3]],
+            [this.values[4], this.values[5], this.values[6], this.values[7]],
+            [this.values[8], this.values[9], this.values[10], this.values[11]],
+            [this.values[12], this.values[13], this.values[14], this.values[15]]
+        ]
+    }
+
+    //#FIXME removed all safety. no idea if this will work
+    /** Convert a matrix into a transformationMatrix. Must be a 4x4 matrix. */
+    public static fromMatrix(matrix: Matrix): Matrix4x4 {
+        return new Matrix4x4(([] as number[])
+            .concat(matrix.getValues()[0])
+            .concat(matrix.getValues()[1])
+            .concat(matrix.getValues()[2])
+            .concat(matrix.getValues()[3])
+        );
+    }
+
+    // /** Given a 3x3 matrix, adds a fourth row and col full of 0s, with a 1 in the corner. */
+    // public static extend3x3Matrix(matrix: Matrix): TransformationMatrix {
+    //     let m33 = matrix.values;
+    //     return new TransformationMatrix([
+    //         m33[0][0], m33[0][1], m33[0][2], 0,
+    //         m33[1][0], m33[1][1], m33[1][2], 0,
+    //         m33[2][0], m33[2][1], m33[2][2], 0,
+    //                 0,         0,         0, 1
+    //     ])
+    // }
+
+    /** Copy the values of an other transformation matrix. Overrides the data of this matrix. */
+    public copy(other: Matrix4x4) {
+        this.values = other.values;
+    }
+
+    public static translationMatrixFromVector3(data: Vector3) {
+        return this.translationMatrix(data.x, data.y, data.z);
+    }
+
+    /** Create a translation matrix from x y and z. */
+    public static translationMatrix(x: number, y: number, z: number): Matrix4x4 {
+        return new Matrix4x4([
+            1, 0, 0, x,
+            0, 1, 0, y,
+            0, 0, 1, z,
+            0, 0, 0, 1
+        ]);
+    }
+
+    /** Create a rotation matrix from x y and z rotation. 3-2-1 rotation order. In degrees. */
+    public static rotationMatrixEulerAnglesDeg(x: number, y: number, z: number): Matrix4x4 {
+        return this.rotationMatrixEulerAnglesDeg(x * MathVQ.Deg2Rad, y * MathVQ.Deg2Rad, z * MathVQ.Deg2Rad);
+    }
+
+    /** Create a rotation matrix from x y and z rotation. 3-2-1 rotation order. In radians. */
+    public static rotationMatrixEulerAnglesRad(x: number, y: number, z: number): Matrix4x4 {
+        const sx = Math.sin(x);
+        const cx = Math.cos(x);
+        const sy = Math.sin(y);
+        const cy = Math.cos(y);
+        const sz = Math.sin(z);
+        const cz = Math.cos(z);
+
+        return new Matrix4x4([
+            cy * cz, cz * sx * sy - cx * sz, sx * sz + cx * cz * sy, 0,
+            cy * sz, cx * cz + sx * sy * sz, cx * sy * sz - cz * sx, 0,
+            -sy, cy * sx, cx * cy, 0,
+            0, 0, 0, 1
+        ]);
+    }
+
     /** Create a rotation matrix from a quaternion. */
-    public static rotationMatrix(data: Quaternion): TransformationMatrix;
-    /** Create a rotation matrix from x y rotation. Assumes no rotation for z. 3-2-1 rotation order.  */
-    public static rotationMatrix(data: Vector2): TransformationMatrix;
-    /** Create a rotation matrix from x y and z rotation. 3-2-1 rotation order. */
-    public static rotationMatrix(data: Vector3): TransformationMatrix;
-    /** Create a rotation matrix from x y and z rotation. 3-2-1 rotation order. Array format should be [x, y, z]. */
-    public static rotationMatrix(data: number[]): TransformationMatrix;
-    public static rotationMatrix(data: Quaternion | Vector | number[]): TransformationMatrix;
-    public static rotationMatrix(param1: Quaternion | Vector | number[] | number, param2?: number, param3?: number): TransformationMatrix {
-        if (param1 instanceof Quaternion) {
-            return TransformationMatrix.fromMatrix(param1.toRotationMatrix4x4());
-        } else if (param1 instanceof Vector) {
-            if (param1 instanceof Vector2) {
-                return TransformationMatrix.fromMatrix(Quaternion.fromEulerAngles(param1.toVector3()).toRotationMatrix4x4());
-            }
-            if (param1 instanceof Vector3) {
-                return TransformationMatrix.fromMatrix(Quaternion.fromEulerAngles(param1).toRotationMatrix4x4());
-            }
-        } else if (typeof param1 == "number") {
-            return TransformationMatrix.fromMatrix(Quaternion.fromEulerAngles(param1, param2, param3).toRotationMatrix4x4());
-        } else {
-            return TransformationMatrix.fromMatrix(Quaternion.fromEulerAngles(param1[0], param1[1], param1[2]).toRotationMatrix4x4());
-        }
-        return TransformationMatrix.Identity();
+    public static rotationMatrix(data: Quaternion): Matrix4x4 {
+        return data.toRotationMatrix4x4();
+    }
+
+    public static scaleMatrixFromVec3(data: Vector3) {
+        return this.scaleMatrix(data.x, data.y, data.z);
     }
 
     /** Generate a scale matrix with different values for each axis. */
-    public static scaleMatrix(x: number, y: number, z: number): TransformationMatrix;
-    /** Generate a uniform scale matrix. Scaling is the same on each axis. */
-    public static scaleMatrix(scale: number): TransformationMatrix;
-    /** Generate a scale matrix with different values for each axis. Array format should be [x, y, z]. */
-    public static scaleMatrix(data: number[]): TransformationMatrix;
-    /** Generate a scale matrix with different values for the x and y axis. Assumes a scale on the z axis of one. */
-    public static scaleMatrix(data: Vector2): TransformationMatrix;
-    /** Generate a scale matrix with different values for each axis. */
-    public static scaleMatrix(data: Vector3): TransformationMatrix;
-    public static scaleMatrix(data: Vector | number): TransformationMatrix;
-    public static scaleMatrix(param1: number | Vector | number[], param2?: number, param3?: number): TransformationMatrix {
-        let sx = 1;
-        let sy = 1;
-        let sz = 1;
-        if (param1 instanceof Vector) {
-            sx = param1.x;
-            sy = param1.y;
-            if (param1 instanceof Vector3) {
-                sz = param1.z;
-            }
-        } else if (Array.isArray(param1)) {
-            sx = (param1 as number[])[0];
-            sy = (param1 as number[])[1];
-            sz = (param1 as number[])[2];
-        } else {
-            sx = sy = sz = param1 as number;
-            if (param2 !== undefined) {
-                sy = param2;
-                sz = param3;
-            }
-        }
-
-        return new TransformationMatrix([
-            [sx, 0, 0, 0],
-            [0, sy, 0, 0],
-            [0, 0, sz, 0],
-            [0, 0, 0, 1],
-        ])
+    public static scaleMatrix(x: number, y: number, z: number): Matrix4x4 {
+        return new Matrix4x4([
+            x, 0, 0, 0,
+            0, y, 0, 0,
+            0, 0, z, 0,
+            0, 0, 0, 1,
+        ]);
     }
 
     /** 
@@ -1126,11 +1269,11 @@ class TransformationMatrix extends Matrix<internalData4x4Lin> {
      * When to apply or how to use? Probably before or after scale.
      */
     public static skewMatrix(XY: number, XZ: number, YX: number, YZ: number, ZX: number, ZY: number) {
-        return new TransformationMatrix([
-            [1, XY, XZ, 0],
-            [YX, 1, YZ, 0],
-            [ZX, ZY, 1, 0],
-            [0, 0, 0, 1],
+        return new Matrix4x4([
+            1, XY, XZ, 0,
+            YX, 1, YZ, 0,
+            ZX, ZY, 1, 0,
+            0, 0, 0, 1,
         ]);
     }
 
@@ -1145,53 +1288,23 @@ class TransformationMatrix extends Matrix<internalData4x4Lin> {
         let b = planeNormal.y;
         let c = planeNormal.z;
         let d = -(a * planePoint.x + b * planePoint.y + c * planePoint.z);
-        return new TransformationMatrix([
-            [1 - 2 * a * a, -2 * a * b, -2 * a * c, -2 * a * d],
-            [-2 * a * b, 1 - 2 * b * b, -2 * b * c, -2 * b * d],
-            [-2 * a * c, -2 * b * c, 1 - 2 * c * c, -2 * c * d],
-            [0, 0, 0, 1],
+        return new Matrix4x4([
+            1 - 2 * a * a, -2 * a * b, -2 * a * c, -2 * a * d,
+            -2 * a * b, 1 - 2 * b * b, -2 * b * c, -2 * b * d,
+            -2 * a * c, -2 * b * c, 1 - 2 * c * c, -2 * c * d,
+            0, 0, 0, 1,
         ]);
     }
 
-    /** Create a full transformation matrix from a translation, a rotation, and a scale. Standard arguments for a 2D object. Rotation angle is applied to the Z axis.*/
-    public static constructTranslationRotationScaleMatrix(translation: Vector2, rotation: number, scale: Vector2): TransformationMatrix;
-    /** Create a full transformation matrix from a translation, a rotation, and a scale. Standard arguments for a 3D object.*/
-    public static constructTranslationRotationScaleMatrix(translation: Vector3, rotation: Quaternion, scale: Vector3): TransformationMatrix;
     /** Create a full transformation matrix from a translation, a rotation, and a scale. */
-    public static constructTranslationRotationScaleMatrix(_translation: TransformationMatrix | Matrix | Vector | number[], _rotation: Matrix | Quaternion | Vector | number[] | number, _scale: Matrix | Vector | number): TransformationMatrix {
-        let translation: TransformationMatrix;
-        let rotation: TransformationMatrix;
-        let scale: TransformationMatrix;
-
-        if (_translation instanceof TransformationMatrix) {
-            translation = _translation;
-        } else if (_translation instanceof Matrix) {
-            translation = TransformationMatrix.fromMatrix(_translation);
-        } else {
-            translation = TransformationMatrix.translationMatrix(_translation);
-        }
-
-        if (_rotation instanceof TransformationMatrix) {
-            rotation = _rotation;
-        } else if (_rotation instanceof Matrix) {
-            rotation = TransformationMatrix.fromMatrix(_rotation);
-        } else if (typeof _rotation == "number") {
-            rotation = TransformationMatrix.rotationMatrix(0, 0, _rotation);
-        } else {
-            rotation = TransformationMatrix.rotationMatrix(_rotation);
-        }
-
-        if (_scale instanceof TransformationMatrix) {
-            scale = _scale;
-        } else if (_scale instanceof Matrix) {
-            scale = TransformationMatrix.fromMatrix(_scale);
-        } else {
-            scale = TransformationMatrix.scaleMatrix(_scale);
-        }
+    public static compose(_translation: Vector3, _rotation: Quaternion, _scale: Vector3): Matrix4x4 {
+        let translation: Matrix4x4 = this.translationMatrix(_translation.x, _translation.y, _translation.z);
+        let rotation: Matrix4x4 = this.rotationMatrix(_rotation);
+        let scale: Matrix4x4 = this.scaleMatrix(_scale.x, _scale.y, _scale.z);
 
         // scale the object "locally", then rotate it "locally", then translate it "globally"
-        let identity = TransformationMatrix.Identity();
-        return identity.thenApply(scale).thenApply(rotation).thenApply(translation);
+        let identity = Matrix4x4.Identity();
+        return identity.multiply(scale).multiply(rotation).multiply(translation);
     }
 
     /** 
@@ -1199,45 +1312,60 @@ class TransformationMatrix extends Matrix<internalData4x4Lin> {
      * Faster than converting the Vector3 to a 1x4 matrix and doing matrix multiplication.
      */
     public applyToVector3(vector: Vector3): Vector3 {
-        let resultArr: number[] = [0, 0, 0, 0];
-        for (let c = 0; c < 4; ++c) {
-            resultArr[0] += this.values[0][c] * vector.x;
-            resultArr[1] += this.values[1][c] * vector.y;
-            resultArr[2] += this.values[2][c] * vector.z;
-            //resultArr[3] += lhs.values[3][c] * 1;
-        }
-        return new Vector3(resultArr[0], resultArr[1], resultArr[2]);
+        return new Vector3(
+            this.values[0] * vector.x + this.values[1] * vector.y + this.values[2] * vector.z + this.values[3],
+            this.values[4] * vector.x + this.values[5] * vector.y + this.values[6] * vector.z + this.values[7],
+            this.values[8] * vector.x + this.values[9] * vector.y + this.values[10] * vector.z + this.values[11],
+        );
     }
 
     /** of Matrix.multiply that specifically returns a TransformationMatrix */
-    public static multiply(lhs: TransformationMatrix, rhs: TransformationMatrix): TransformationMatrix {
+    public multiply(other: Matrix4x4): Matrix4x4 {
+        let outMat = new Matrix4x4(Matrix4x4.Blank4x4Array());
 
-
-        let m: internalData4x4;  // declare internal data structure
-        for (let r = 0; r < 4; ++r) {
-            m[r] = [0, 0, 0, 0]; // initialize the current row
-            for (let c = 0; c < 4; ++c) {
-                m[r][c] = 0; // initialize the current cell
-                for (let i = 0; i < 4; ++i) {
-                    m[r][c] += lhs.values[r][i] * rhs.values[i][c];
-                }
+        for (let r = 0; r < 4; r++) {
+            for (let c = 0; c < 4; c++) {
+                outMat.values[r * 4 + c] =
+                    this.values[(r << 2) + 0] * other.values[0 + c] +
+                    this.values[(r << 2) + 1] * other.values[4 + c] +
+                    this.values[(r << 2) + 2] * other.values[8 + c] +
+                    this.values[(r << 2) + 3] * other.values[12 + c];
             }
         }
-        return new TransformationMatrix(m);
+
+        return outMat;
     }
 
-
-
-    /** Return a new transformation matrix corresponding to this transformation, then an other transformation. */
-    public thenApply(other: TransformationMatrix): TransformationMatrix {
-        return TransformationMatrix.multiply(this, other);
+    public multiplySelf(other: Matrix4x4): void {
+        let nmat = this.multiply(other);
+        this.copy(nmat);
     }
 
-    /** Return a new transformation matrix corresponding to this an other transformation, then this transformation. */
-    // #FIXME necessary? when would this ever be used? also confusing with thenApply.
-    public applyThen(other: TransformationMatrix): TransformationMatrix {
-        return TransformationMatrix.multiply(other, this);
+    // #FIXME should we allow transposing 4x4 matrices?
+    public transpose(): Matrix4x4 {
+        return new Matrix4x4([
+            this.values[0], this.values[4], this.values[8], this.values[12],
+            this.values[1], this.values[5], this.values[9], this.values[13],
+            this.values[2], this.values[6], this.values[10], this.values[14],
+            this.values[3], this.values[7], this.values[11], this.values[15]
+        ]);
     }
 
-    // #TODO create functions that alter this matrix instead of returning a new one
+    public transposeSelf(): void {
+        this.copy(this.transpose());
+    }
+
+    determinant(): number {
+        throw ("Method not implemented.");
+    }
+    inverse(): number {
+        throw ("Method not implemented.");
+    }
+    trace(): number {
+        throw ("Method not implemented.");
+    }
+    isSymmetric(): boolean {
+        throw ("Method not implemented.");
+    }
+
 }
