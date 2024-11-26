@@ -1,6 +1,7 @@
 //Vector Quaternion Matrix Extension
 namespace VQME {
 
+    //rotate a vector by a quaternion
     export function RotateVec(lhs: Quaternion, rhs: Vec3) {
         let qsame = new Quaternion(lhs.w, lhs.x, lhs.y, lhs.z);
         let qvec = new Quaternion(0, rhs.x, rhs.y, rhs.z);
@@ -11,10 +12,12 @@ namespace VQME {
         return new Vec3(qoutq.x, qoutq.y, qoutq.z);
     }
 
+    //cross dot of two vector3s
     export function Dot3(lhs: Vec3, rhs: Vec3) {
         return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
     }
 
+    //cross product of two vector3s
     export function Cross3(lhs: Vec3, rhs: Vec3) {
         let nx = lhs.y * rhs.z - lhs.z * rhs.y;
         let ny = lhs.z * rhs.x - lhs.x * rhs.z;
@@ -22,6 +25,7 @@ namespace VQME {
         return new Vec3(nx, ny, nz);
     }
 
+    //rotate a quaternion by another quaterion
     export function RotateQ(lhs: Quaternion, rhs: Quaternion) {
         let a = lhs;
         let b = rhs;
@@ -44,49 +48,54 @@ namespace VQME {
         return new Vec3(lhs.x - rhs.x, lhs.y - rhs.y, lhs.z - rhs.z);
     }
 
-    //multiply a vector by a scalar
+    //multiply a vector3 by a scalar
     export function Multiply3(v: Vec3, s: number) {
         return new Vec3(v.x * s, v.y * s, v.z * s);
     }
 
-    //divide a vector by a scalar
+    //divide a vector3 by a scalar
     export function Divide3(v: Vec3, s: number) {
         return new Vec3(v.x / s, v.y / s, v.z / s);
     }
 
+    //multiply a vector2 by a scalar
     export function Multiply2(v: Vec2, s: number) {
         return new Vec2(v.x * s, v.y * s);
     }
 
-    //find the distance between two vectors squared (faster than Distance() ** 2)
+    //divide a vector2 by a scalar
+    export function Divide2(v: Vec2, s: number) {
+        return new Vec2(v.x / s, v.y / s);
+    }
+
+    //find the distance between two vector3s squared (faster than Distance() ** 2)
     export function SqrDistance3(posA: Vec3, posB: Vec3) {
         return ((posA.x - posB.x) ** 2) + ((posA.y - posB.y) ** 2) + ((posA.z - posB.z) ** 2);
     }
 
-
-    //find the distance between two vectors squared (faster than Distance() ** 2)
+    //find the distance between two vector2s squared (faster than Distance() ** 2)
     export function SqrDistance2(posA: Vec2, posB: Vec2) {
         return ((posA.x - posB.x) ** 2) + ((posA.y - posB.y) ** 2);
     }
 
-    //find the distance between two vectors
+    //find the distance between two vector3s
     export function Distance3(posA: Vec3, posB: Vec3) {
         return Math.sqrt(SqrDistance3(posA, posB));
     }
 
-    //find the distance between two vectors
+    //find the distance between two vector2s
     export function Distance2(posA: Vec2, posB: Vec2) {
         return Math.sqrt(SqrDistance2(posA, posB));
     }
 
-    //get the dot product of two vectors divided by both their magnitudes
+    //get the dot product of two vector3s divided by both their magnitudes (normalized dot product)
     export function Dot3Norm(lhs: Vec3, rhs: Vec3) {
         let doublemag = lhs.Magnitude() * rhs.Magnitude();
         return (Dot3(lhs, rhs) / doublemag);
     }
 
-    //returns the angle between two vectors
-    export function Angle(lhs: Vec3, rhs: Vec3) {
+    //returns the angle between two vector3s
+    export function Angle3(lhs: Vec3, rhs: Vec3) {
         return Math.acos(Dot3Norm(lhs, rhs));
     }
 
@@ -203,6 +212,7 @@ namespace VQME {
             return new Matrix([[this.x], [this.y], [this.z], [1]]);
         }
     }
+
     export class Vec2 {
         x: number;
         y: number;
@@ -512,16 +522,22 @@ namespace DFPoly {
                 outInds |= 1 << i;
             }
         }
-        //trivial accept and trivial reject
+
+        //#fix# not all cases done
         if (outCount == 0) {
+            //trivial accept
             output.outTrigs = trig;
         }
-        if (outCount == 3) {
+        else if (outCount == 3) {
+            //trivial reject
             output.rejected = true;
         }
-        //for 1 and 2 consider edge cases
-        if(outCount == 2) {
-        
+        else if(outCount == 2) {
+            //if both out one side, pull to edge of screen
+            //if out different sides, quad?
+        }
+        else if(outCount == 1) {
+            //make into quad?
         }
         return output;
     }
