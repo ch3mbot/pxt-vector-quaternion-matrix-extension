@@ -1216,6 +1216,7 @@ class Matrix4x4 implements ISquareMatrix {
                     case 3: return this.m33;
                 }
         }
+        throw ("Can only access a Matrix4x4 at row 0-4 and col 0-4.")
     }
     public set(row: number, col: number, val: number) {
         switch (row) {
