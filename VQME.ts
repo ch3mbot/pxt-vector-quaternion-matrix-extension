@@ -728,12 +728,12 @@ class Quaternion {
         //         2 * (q[1] * q[3] - q[0] * q[2]), 2 * (q[2] * q[3] + q[0] * q[1]), 2 * (q[0] * q[0] + q[3] * q[3]) - 1, 0,
         //         0, 0, 0, 0
         //     ]);
-        return new Matrix4x4([
+        return new Matrix4x4(
             2 * (this.w * this.w + this.x * this.x) - 1, 2 * (this.x * this.y - this.w * this.z), 2 * (this.x * this.z + this.w * this.y), 0,
             2 * (this.x * this.y + this.w * this.z), 2 * (this.w * this.w + this.y * this.y) - 1, 2 * (this.y * this.z - this.w * this.x), 0,
             2 * (this.x * this.z - this.w * this.y), 2 * (this.y * this.z + this.w * this.x), 2 * (this.w * this.w + this.z * this.z) - 1, 0,
             0, 0, 0, 1
-        ]);
+        );
     }
 
     /** Convert to string. */
@@ -1163,94 +1163,198 @@ class Matrix implements IMatrix {
 
 class Matrix4x4 implements ISquareMatrix {
 
-    private values: number[];
+    // private values: number[];
+    private m00: number; private m01: number; private m02: number; private m03: number;
+    private m10: number; private m11: number; private m12: number; private m13: number;
+    private m20: number; private m21: number; private m22: number; private m23: number;
+    private m30: number; private m31: number; private m32: number; private m33: number;
 
-    constructor(values: number[]) {
-        this.values = values;
+    // constructor(values: number[]) {
+    //     this.values = values;
+    // }
+    constructor(
+        m00: number, m01: number, m02: number, m03: number,
+        m10: number, m11: number, m12: number, m13: number,
+        m20: number, m21: number, m22: number, m23: number,
+        m30: number, m31: number, m32: number, m33: number,
+    ) {
+        this.m00 = m00; this.m01 = m01; this.m02 = m02; this.m03 = m03;
+        this.m10 = m10; this.m11 = m11; this.m12 = m12; this.m13 = m13;
+        this.m20 = m20; this.m21 = m21; this.m22 = m22; this.m23 = m23;
+        this.m30 = m30; this.m31 = m31; this.m32 = m32; this.m33 = m33;
     }
 
-    public get(row: number, col: number): number { return this.values[(row << 2) + col]; }
-    public set(row: number, col: number, val: number) { this.values[(row << 2) + col] - val; }
+    public get(row: number, col: number): number {
+        // return this.values[(row << 2) + col];
+        switch (row) {
+            case 0: 
+                switch (col) {
+                    case 0: return this.m00;
+                    case 1: return this.m01;
+                    case 2: return this.m02;
+                    case 3: return this.m03;
+                }
+            case 1: 
+                switch (col) {
+                    case 0: return this.m10;
+                    case 1: return this.m11;
+                    case 2: return this.m12;
+                    case 3: return this.m13;
+                }
+            case 2: 
+                switch (col) {
+                    case 0: return this.m20;
+                    case 1: return this.m21;
+                    case 2: return this.m22;
+                    case 3: return this.m23;
+                }
+            case 3: 
+                switch (col) {
+                    case 0: return this.m30;
+                    case 1: return this.m31;
+                    case 2: return this.m32;
+                    case 3: return this.m33;
+                }
+        }
+    }
+    public set(row: number, col: number, val: number) {
+        switch (row) {
+            case 0: switch (col) {
+                    case 0: this.m00 = val; return;
+                    case 1: this.m01 = val; return;
+                    case 2: this.m02 = val; return;
+                    case 3: this.m03 = val; return;
+                }
+            case 1: switch (col) {
+                    case 0: this.m10 = val; return;
+                    case 1: this.m11 = val; return;
+                    case 2: this.m12 = val; return;
+                    case 3: this.m13 = val; return;
+                }
+            case 2: switch (col) {
+                    case 0: this.m20 = val; return;
+                    case 1: this.m21 = val; return;
+                    case 2: this.m22 = val; return;
+                    case 3: this.m23 = val; return;
+                }
+            case 3: switch (col) {
+                    case 0: this.m30 = val; return;
+                    case 1: this.m31 = val; return;
+                    case 2: this.m32 = val; return;
+                    case 3: this.m33 = val; return;
+                }
+        }
+    }
 
     public rows(): number { return 4; }
     public cols(): number { return 4; }
 
     public getRow(row: number): number[] {
-        let offset = (row << 2);
-        return [
-            this.values[0 + offset],
-            this.values[1 + offset],
-            this.values[2 + offset],
-            this.values[3 + offset]
-        ];
+        // let offset = (row << 2);
+        // return [
+        //     this.values[0 + offset],
+        //     this.values[1 + offset],
+        //     this.values[2 + offset],
+        //     this.values[3 + offset]
+        // ];
+        throw ("Unimplemented.");
     }
     public getCol(col: number): number[] {
-        return [
-            this.values[0 + col],
-            this.values[4 + col],
-            this.values[8 + col],
-            this.values[12 + col],
-        ];
+        // return [
+        //     this.values[0 + col],
+        //     this.values[4 + col],
+        //     this.values[8 + col],
+        //     this.values[12 + col],
+        // ];
+        throw ("Unimplemented.");
+
     }
 
     public setRow(row: number, vals: number[]): void {
-        let offset = (row << 2);
-        this.values[1 + offset] = vals[0];
-        this.values[2 + offset] = vals[1];
-        this.values[3 + offset] = vals[2];
-        this.values[4 + offset] = vals[3];
+        // let offset = (row << 2);
+        // this.values[1 + offset] = vals[0];
+        // this.values[2 + offset] = vals[1];
+        // this.values[3 + offset] = vals[2];
+        // this.values[4 + offset] = vals[3];
+        throw ("Unimplemented.");
     }
     public setCol(col: number, vals: number[]): void {
-        this.values[0 + col] = vals[0];
-        this.values[4 + col] = vals[0];
-        this.values[8 + col] = vals[0];
-        this.values[12 + col] = vals[0];
+        // this.values[0 + col] = vals[0];
+        // this.values[4 + col] = vals[0];
+        // this.values[8 + col] = vals[0];
+        // this.values[12 + col] = vals[0];
+        throw ("Unimplemented.");
     }
 
     // Why would you ever call this. #FIXME? make it just throw something
     public fill(val: number): void {
-        this.values = [
-            val, val, val, val,
-            val, val, val, val,
-            val, val, val, val,
-            val, val, val, val
-        ];
+        // this.values = [
+        //     val, val, val, val,
+        //     val, val, val, val,
+        //     val, val, val, val,
+        //     val, val, val, val
+        // ];
+        // this.m00 = this.m01 = this.m02 = this.m03 = val;
+        // this.m10 = this.m11 = this.m12 = this.m13 = val;
+        // this.m20 = this.m21 = this.m22 = this.m23 = val;
+        // this.m30 = this.m31 = this.m32 = this.m33 = val;
+        
+        this.m00 = val; this.m01 = val; this.m02 = val; this.m03 = val;
+        this.m10 = val; this.m11 = val; this.m12 = val; this.m13 = val;
+        this.m20 = val; this.m21 = val; this.m22 = val; this.m23 = val;
+        this.m30 = val; this.m31 = val; this.m32 = val; this.m33 = val;
     }
 
     /** Returns a transformation matrix representing no change. */
     public static Identity(): Matrix4x4 {
-        return new Matrix4x4(Matrix4x4.IdentityArray());
-    }
-
-    public static IdentityArray(): number[] {
-        return ([
+        // return new Matrix4x4(Matrix4x4.IdentityArray());
+        return new Matrix4x4(
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
-            0, 0, 0, 1
-        ]);
+            0, 0, 0, 1,
+        )
     }
 
-    public static Blank4x4Array(): number[] {
-        return ([
-            0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0, 0, 0,
-            0, 0, 0, 0
-        ]);
-    }
+    // public static IdentityArray(): number[] {
+    //     return ([
+    //         1, 0, 0, 0,
+    //         0, 1, 0, 0,
+    //         0, 0, 1, 0,
+    //         0, 0, 0, 1
+    //     ]);
+    // }
+
+    // public static Blank4x4Array(): number[] {
+    //     return ([
+    //         0, 0, 0, 0,
+    //         0, 0, 0, 0,
+    //         0, 0, 0, 0,
+    //         0, 0, 0, 0
+    //     ]);
+    // }
 
     // conversion
 
     /** Return a copy of this transformation matrix */
     public clone(): Matrix4x4 {
-        return new Matrix4x4(this.values);
+        // return new Matrix4x4(this.values);
+        return new Matrix4x4(
+            this.m00, this.m01, this.m02, this.m03,
+            this.m10, this.m11, this.m12, this.m13,
+            this.m20, this.m21, this.m22, this.m23,
+            this.m30, this.m31, this.m32, this.m33
+        )
     }
 
 
     // #FIXME test .every
     public equals(other: Matrix4x4): boolean {
-        return this.values.every((val, index) => val == other.values[index]);
+        // return this.values.every((val, index) => val == other.values[index]);
+        return  this.m00 == other.m00 && this.m01 == other.m01 && this.m02 == other.m02 && this.m03 == other.m03 &&
+                this.m10 == other.m10 && this.m11 == other.m11 && this.m12 == other.m12 && this.m13 == other.m13 &&
+                this.m20 == other.m20 && this.m21 == other.m21 && this.m22 == other.m22 && this.m23 == other.m23 &&
+                this.m30 == other.m30 && this.m31 == other.m31 && this.m32 == other.m32 && this.m33 == other.m33; 
     }
 
     // #FIXME implement
@@ -1259,32 +1363,40 @@ class Matrix4x4 implements ISquareMatrix {
     }
 
     public toArray(): number[] {
+        // return [
+        //     this.values[0], this.values[1], this.values[2], this.values[3],
+        //     this.values[4], this.values[5], this.values[6], this.values[7],
+        //     this.values[8], this.values[9], this.values[10], this.values[11],
+        //     this.values[12], this.values[13], this.values[14], this.values[15]
+        // ]
+
         return [
-            this.values[0], this.values[1], this.values[2], this.values[3],
-            this.values[4], this.values[5], this.values[6], this.values[7],
-            this.values[8], this.values[9], this.values[10], this.values[11],
-            this.values[12], this.values[13], this.values[14], this.values[15]
+            this.m00, this.m01, this.m02, this.m03,
+            this.m10, this.m11, this.m12, this.m13,
+            this.m20, this.m21, this.m22, this.m23,
+            this.m30, this.m31, this.m32, this.m33,
         ]
     }
 
     public toArray2D(): number[][] {
-        return [
-            [this.values[0], this.values[1], this.values[2], this.values[3]],
-            [this.values[4], this.values[5], this.values[6], this.values[7]],
-            [this.values[8], this.values[9], this.values[10], this.values[11]],
-            [this.values[12], this.values[13], this.values[14], this.values[15]]
-        ]
+        // return [
+        //     [this.values[0], this.values[1], this.values[2], this.values[3]],
+        //     [this.values[4], this.values[5], this.values[6], this.values[7]],
+        //     [this.values[8], this.values[9], this.values[10], this.values[11]],
+        //     [this.values[12], this.values[13], this.values[14], this.values[15]]
+        // ]
+        throw ("Unimplemented.")
     }
 
     //#FIXME removed all safety. no idea if this will work
     /** Convert a matrix into a transformationMatrix. Must be a 4x4 matrix. */
     public static fromMatrix(matrix: Matrix): Matrix4x4 {
-        return new Matrix4x4(([] as number[])
-            .concat(matrix.getValues()[0])
-            .concat(matrix.getValues()[1])
-            .concat(matrix.getValues()[2])
-            .concat(matrix.getValues()[3])
-        );
+        return new Matrix4x4(
+            matrix.get(0, 0), matrix.get(0, 0), matrix.get(0, 0), matrix.get(0, 0), 
+            matrix.get(1, 1), matrix.get(1, 1), matrix.get(1, 1), matrix.get(1, 1), 
+            matrix.get(2, 2), matrix.get(2, 2), matrix.get(2, 2), matrix.get(2, 2), 
+            matrix.get(3, 3), matrix.get(3, 3), matrix.get(3, 3), matrix.get(3, 3), 
+        )
     }
 
     // /** Given a 3x3 matrix, adds a fourth row and col full of 0s, with a 1 in the corner. */
@@ -1300,7 +1412,10 @@ class Matrix4x4 implements ISquareMatrix {
 
     /** Copy the values of an other transformation matrix. Overrides the data of this matrix. */
     public copy(other: Matrix4x4) {
-        this.values = other.values;
+        this.m00 = other.m00; this.m01 = other.m01; this.m02 = other.m02; this.m03 = other.m03; 
+        this.m10 = other.m10; this.m11 = other.m11; this.m12 = other.m12; this.m13 = other.m13; 
+        this.m20 = other.m20; this.m21 = other.m21; this.m22 = other.m22; this.m23 = other.m23; 
+        this.m30 = other.m30; this.m31 = other.m31; this.m32 = other.m32; this.m33 = other.m33; 
     }
 
     public static translationMatrixFromVector3(data: Vector3) {
@@ -1309,12 +1424,12 @@ class Matrix4x4 implements ISquareMatrix {
 
     /** Create a translation matrix from x y and z. */
     public static translationMatrix(x: number, y: number, z: number): Matrix4x4 {
-        return new Matrix4x4([
+        return new Matrix4x4(
             1, 0, 0, x,
             0, 1, 0, y,
             0, 0, 1, z,
             0, 0, 0, 1
-        ]);
+        );
     }
 
     /** Create a rotation matrix from x y and z rotation. 3-2-1 rotation order. In degrees. */
@@ -1331,12 +1446,12 @@ class Matrix4x4 implements ISquareMatrix {
         const sz = Math.sin(z);
         const cz = Math.cos(z);
 
-        return new Matrix4x4([
+        return new Matrix4x4(
             cy * cz, cz * sx * sy - cx * sz, sx * sz + cx * cz * sy, 0,
             cy * sz, cx * cz + sx * sy * sz, cx * sy * sz - cz * sx, 0,
             -sy, cy * sx, cx * cy, 0,
             0, 0, 0, 1
-        ]);
+        );
     }
 
     /** Create a rotation matrix from a quaternion. */
@@ -1350,12 +1465,12 @@ class Matrix4x4 implements ISquareMatrix {
 
     /** Generate a scale matrix with different values for each axis. */
     public static scaleMatrix(x: number, y: number, z: number): Matrix4x4 {
-        return new Matrix4x4([
+        return new Matrix4x4(
             x, 0, 0, 0,
             0, y, 0, 0,
             0, 0, z, 0,
             0, 0, 0, 1,
-        ]);
+        );
     }
 
     /** 
@@ -1364,12 +1479,12 @@ class Matrix4x4 implements ISquareMatrix {
      * When to apply or how to use? Probably before or after scale.
      */
     public static skewMatrix(XY: number, XZ: number, YX: number, YZ: number, ZX: number, ZY: number) {
-        return new Matrix4x4([
+        return new Matrix4x4(
             1, XY, XZ, 0,
             YX, 1, YZ, 0,
             ZX, ZY, 1, 0,
             0, 0, 0, 1,
-        ]);
+        );
     }
 
     /**
@@ -1383,12 +1498,12 @@ class Matrix4x4 implements ISquareMatrix {
         let b = planeNormal.y;
         let c = planeNormal.z;
         let d = -(a * planePoint.x + b * planePoint.y + c * planePoint.z);
-        return new Matrix4x4([
+        return new Matrix4x4(
             1 - 2 * a * a, -2 * a * b, -2 * a * c, -2 * a * d,
             -2 * a * b, 1 - 2 * b * b, -2 * b * c, -2 * b * d,
             -2 * a * c, -2 * b * c, 1 - 2 * c * c, -2 * c * d,
             0, 0, 0, 1,
-        ]);
+        );
     }
 
     /** Create a full transformation matrix from a translation, a rotation, and a scale. */
@@ -1400,6 +1515,10 @@ class Matrix4x4 implements ISquareMatrix {
         // scale the object "locally", then rotate it "locally", then translate it "globally"
         let identity = Matrix4x4.Identity();
         return identity.multiply(scale).multiply(rotation).multiply(translation);
+    } 
+
+    public static composeFast(translation: Vector3, rotation: Quaternion, scale: Vector3): Matrix4x4 {
+        throw ("Unimplemented")
     }
 
     public static composeInverse(_translation: Vector3, _rotation: Quaternion, _scale: Vector3): Matrix4x4 {
@@ -1417,37 +1536,75 @@ class Matrix4x4 implements ISquareMatrix {
      * Faster than converting the Vector3 to a 1x4 matrix and doing matrix multiplication.
      */
     public applyToVector3(vector: Vector3): Vector3 {
-        return new Vector3(
-            this.values[0] * vector.x + this.values[1] * vector.y + this.values[2] * vector.z + this.values[3],
-            this.values[4] * vector.x + this.values[5] * vector.y + this.values[6] * vector.z + this.values[7],
-            this.values[8] * vector.x + this.values[9] * vector.y + this.values[10] * vector.z + this.values[11],
+        // return new Vector3(
+        //     this.values[0] * vector.x + this.values[1] * vector.y + this.values[2] * vector.z + this.values[3],
+        //     this.values[4] * vector.x + this.values[5] * vector.y + this.values[6] * vector.z + this.values[7],
+        //     this.values[8] * vector.x + this.values[9] * vector.y + this.values[10] * vector.z + this.values[11],
+        // );
+        return this.multiplyVector4x1(Vector4x1.fromVector3(vector)).toVector3();
+    }
+
+    public multiplyVector4x1Affine(vector4x1: Vector4x1): Vector4x1 {
+        // return new Vector4x1(
+        //     this.values[0] * vector4x1.x + this.values[1] * vector4x1.y + this.values[2] * vector4x1.z + this.values[3] * vector4x1.w,
+        //     this.values[4] * vector4x1.x + this.values[5] * vector4x1.y + this.values[6] * vector4x1.z + this.values[7] * vector4x1.w,
+        //     this.values[8] * vector4x1.x + this.values[9] * vector4x1.y + this.values[10] * vector4x1.z + this.values[11] * vector4x1.w,
+        //     1
+        // );
+        return new Vector4x1(
+            this.m00 * vector4x1.x + this.m01 * vector4x1.y + this.m02 * vector4x1.z + this.m03 * vector4x1.w,
+            this.m10 * vector4x1.x + this.m11 * vector4x1.y + this.m12 * vector4x1.z + this.m13 * vector4x1.w,
+            this.m20 * vector4x1.x + this.m21 * vector4x1.y + this.m22 * vector4x1.z + this.m23 * vector4x1.w,
+            1
         );
     }
 
     public multiplyVector4x1(vector4x1: Vector4x1): Vector4x1 {
+        // return new Vector4x1(
+        //     this.values[0] * vector4x1.x + this.values[1] * vector4x1.y + this.values[2] * vector4x1.z + this.values[3] * vector4x1.w,
+        //     this.values[4] * vector4x1.x + this.values[5] * vector4x1.y + this.values[6] * vector4x1.z + this.values[7] * vector4x1.w,
+        //     this.values[8] * vector4x1.x + this.values[9] * vector4x1.y + this.values[10] * vector4x1.z + this.values[11] * vector4x1.w,
+        //     this.values[12] * vector4x1.x + this.values[13] * vector4x1.y + this.values[14] * vector4x1.z + this.values[15] * vector4x1.w
+        // );
+        
         return new Vector4x1(
-            this.values[0] * vector4x1.x + this.values[1] * vector4x1.y + this.values[2] * vector4x1.z + this.values[3] * vector4x1.w,
-            this.values[4] * vector4x1.x + this.values[5] * vector4x1.y + this.values[6] * vector4x1.z + this.values[7] * vector4x1.w,
-            this.values[8] * vector4x1.x + this.values[9] * vector4x1.y + this.values[10] * vector4x1.z + this.values[11] * vector4x1.w,
-            this.values[12] * vector4x1.x + this.values[13] * vector4x1.y + this.values[14] * vector4x1.z + this.values[15] * vector4x1.w
+            this.m00 * vector4x1.x + this.m01 * vector4x1.y + this.m02 * vector4x1.z + this.m03 * vector4x1.w,
+            this.m10 * vector4x1.x + this.m11 * vector4x1.y + this.m12 * vector4x1.z + this.m13 * vector4x1.w,
+            this.m20 * vector4x1.x + this.m21 * vector4x1.y + this.m22 * vector4x1.z + this.m23 * vector4x1.w,
+            this.m30 * vector4x1.x + this.m31 * vector4x1.y + this.m32 * vector4x1.z + this.m33 * vector4x1.w
         );
     }
 
     /** of Matrix.multiply that specifically returns a TransformationMatrix */
     public multiply(other: Matrix4x4): Matrix4x4 {
-        let outMat = new Matrix4x4(Matrix4x4.Blank4x4Array());
+        // let outMat = new Matrix4x4(Matrix4x4.Blank4x4Array());
 
-        for (let r = 0; r < 4; r++) {
-            for (let c = 0; c < 4; c++) {
-                outMat.values[r * 4 + c] =
-                    this.values[(r << 2) + 0] * other.values[0 + c] +
-                    this.values[(r << 2) + 1] * other.values[4 + c] +
-                    this.values[(r << 2) + 2] * other.values[8 + c] +
-                    this.values[(r << 2) + 3] * other.values[12 + c];
-            }
-        }
+        // for (let r = 0; r < 4; r++) {
+        //     for (let c = 0; c < 4; c++) {
+        //         outMat.values[r * 4 + c] =
+        //             this.values[(r << 2) + 0] * other.values[0 + c] +
+        //             this.values[(r << 2) + 1] * other.values[4 + c] +
+        //             this.values[(r << 2) + 2] * other.values[8 + c] +
+        //             this.values[(r << 2) + 3] * other.values[12 + c];
+        //     }
+        // }
 
-        return outMat;
+        // return outMat;
+        return new Matrix4x4(
+            this.m00 * other.m00 + this.m01 * other.m10 + this.m02 * other.m20 + this.m03 * other.m30, this.m00 * other.m01 + this.m01 * other.m11 + this.m02 * other.m21 + this.m03 * other.m31, this.m00 * other.m02 + this.m01 * other.m12 + this.m02 * other.m22 + this.m03 * other.m32, this.m00 * other.m03 + this.m01 * other.m13 + this.m02 * other.m23 + this.m03 * other.m33,
+            this.m10 * other.m00 + this.m11 * other.m10 + this.m12 * other.m20 + this.m13 * other.m30, this.m10 * other.m01 + this.m11 * other.m11 + this.m12 * other.m21 + this.m13 * other.m31, this.m10 * other.m02 + this.m11 * other.m12 + this.m12 * other.m22 + this.m13 * other.m32, this.m10 * other.m03 + this.m11 * other.m13 + this.m12 * other.m23 + this.m13 * other.m33,
+            this.m20 * other.m00 + this.m21 * other.m10 + this.m22 * other.m20 + this.m23 * other.m30, this.m20 * other.m01 + this.m21 * other.m11 + this.m22 * other.m21 + this.m23 * other.m31, this.m20 * other.m02 + this.m21 * other.m12 + this.m22 * other.m22 + this.m23 * other.m32, this.m20 * other.m03 + this.m21 * other.m13 + this.m22 * other.m23 + this.m23 * other.m33,
+            this.m30 * other.m00 + this.m31 * other.m10 + this.m32 * other.m20 + this.m13 * other.m30, this.m30 * other.m01 + this.m31 * other.m11 + this.m32 * other.m21 + this.m13 * other.m31, this.m30 * other.m02 + this.m31 * other.m12 + this.m32 * other.m22 + this.m13 * other.m32, this.m30 * other.m03 + this.m31 * other.m13 + this.m32 * other.m23 + this.m13 * other.m33,
+        )
+    }
+
+    public multiplyAffine(other: Matrix4x4): Matrix4x4 {
+        return new Matrix4x4(
+            this.m00 * other.m00 + this.m01 * other.m10 + this.m02 * other.m20, this.m00 * other.m01 + this.m01 * other.m11 + this.m02 * other.m21, this.m00 * other.m02 + this.m01 * other.m12 + this.m02 * other.m22, this.m00 * other.m03 + this.m01 * other.m13 + this.m02 * other.m23,
+            this.m10 * other.m00 + this.m11 * other.m10 + this.m12 * other.m20, this.m10 * other.m01 + this.m11 * other.m11 + this.m12 * other.m21, this.m10 * other.m02 + this.m11 * other.m12 + this.m12 * other.m22, this.m10 * other.m03 + this.m11 * other.m13 + this.m12 * other.m23,
+            this.m20 * other.m00 + this.m21 * other.m10 + this.m22 * other.m20, this.m20 * other.m01 + this.m21 * other.m11 + this.m22 * other.m21, this.m20 * other.m02 + this.m21 * other.m12 + this.m22 * other.m22, this.m20 * other.m03 + this.m21 * other.m13 + this.m22 * other.m23,
+            0, 0, 0, 1    
+        )
     }
 
     public multiplySelf(other: Matrix4x4): void {
@@ -1457,31 +1614,18 @@ class Matrix4x4 implements ISquareMatrix {
 
     // #FIXME should we allow transposing 4x4 matrices?
     public transpose(): Matrix4x4 {
-        return new Matrix4x4([
-            this.values[0], this.values[4], this.values[8], this.values[12],
-            this.values[1], this.values[5], this.values[9], this.values[13],
-            this.values[2], this.values[6], this.values[10], this.values[14],
-            this.values[3], this.values[7], this.values[11], this.values[15]
-        ]);
-    }
-
-    // Nice operations for transforming specific parts
-    public translateSelf(x: number, y: number, z: number): void {
-        this.values[3] += x;
-        this.values[7] += y;
-        this.values[11] += z;
-    }
-
-    public setPosition(x: number, y: number, z: number): void {
-        this.values[3] = x;
-        this.values[7] = y;
-        this.values[11] = z;
-    }
-
-    public scaleSelf(x: number, y: number, z: number): void {
-        this.values[0] *= x;
-        this.values[5] *= x;
-        this.values[10] *= x;
+        // return new Matrix4x4([
+        //     this.values[0], this.values[4], this.values[8], this.values[12],
+        //     this.values[1], this.values[5], this.values[9], this.values[13],
+        //     this.values[2], this.values[6], this.values[10], this.values[14],
+        //     this.values[3], this.values[7], this.values[11], this.values[15]
+        // ]);
+        return new Matrix4x4(
+            this.m00, this.m01, this.m02, this.m03,
+            this.m10, this.m11, this.m12, this.m13,
+            this.m20, this.m21, this.m22, this.m23,
+            this.m30, this.m31, this.m32, this.m33,
+        )
     }
 
     public transposeSelf(): void {
@@ -1492,7 +1636,7 @@ class Matrix4x4 implements ISquareMatrix {
         throw ("Method not implemented.");
     }
 
-    // assumes affine
+    // assumes affine?
     public inverse(): Matrix4x4 {
         throw ("Method not implemented.");
     }
